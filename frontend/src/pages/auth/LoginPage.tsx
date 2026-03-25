@@ -32,7 +32,7 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: 'background.default',
       }}
     >
       <Card sx={{ width: { xs: '100%', sm: 400 }, mx: { xs: 2, sm: 0 } }}>

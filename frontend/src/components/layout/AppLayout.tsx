@@ -41,7 +41,10 @@ import ImportExportIcon from '@mui/icons-material/ImportExport';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import TerminalIcon from '@mui/icons-material/Terminal';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useThemeMode, useAppColors } from '../../context/ThemeContext.tsx';
 
 const DRAWER_WIDTH = 260;
 
@@ -120,6 +123,8 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { mode, toggleTheme } = useThemeMode();
+  const colors = useAppColors();
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
@@ -139,7 +144,7 @@ export default function AppLayout() {
           Rice Mill Katha
         </Typography>
       </Box>
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+      <Divider sx={{ borderColor: colors.drawerDivider }} />
       {navGroups.map((group) => (
         <List
           key={group.title || 'main'}
@@ -148,7 +153,7 @@ export default function AppLayout() {
               <ListSubheader
                 sx={{
                   backgroundColor: 'transparent',
-                  color: 'rgba(255,255,255,0.6)',
+                  color: colors.drawerSubheader,
                   fontSize: '0.7rem',
                   textTransform: 'uppercase',
                   letterSpacing: 1,
@@ -170,17 +175,17 @@ export default function AppLayout() {
                   if (isMobile) setMobileOpen(false);
                 }}
                 sx={{
-                  color: 'white',
+                  color: colors.drawerText,
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    backgroundColor: colors.drawerSelectedBg,
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    backgroundColor: colors.drawerHoverBg,
                   },
                   py: 0.5,
                 }}
               >
-                <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>{item.icon}</ListItemIcon>
+                <ListItemIcon sx={{ color: colors.drawerText, minWidth: 40 }}>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.875rem' }} />
               </ListItemButton>
             </ListItem>
@@ -214,6 +219,9 @@ export default function AppLayout() {
           <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
             {user?.email}
           </Typography>
+          <IconButton color="inherit" onClick={toggleTheme} sx={{ mr: 1 }} title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
+            {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+          </IconButton>
           <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ minWidth: { xs: 'auto', sm: 64 } }}>
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Logout</Box>
           </Button>

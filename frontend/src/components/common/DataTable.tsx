@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useAppColors } from '../../context/ThemeContext.tsx';
 
 interface DataTableProps<T> {
   columns: GridColDef[];
@@ -45,6 +46,7 @@ export default function DataTable<T extends { id: number }>({
   const [search, setSearch] = useState(searchValue ?? '');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const colors = useAppColors();
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && onSearchChange) {
@@ -130,9 +132,9 @@ export default function DataTable<T extends { id: number }>({
         autoHeight
         columnVisibilityModel={columnVisibilityModel}
         sx={{
-          backgroundColor: 'white',
+          backgroundColor: colors.surface,
           '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: '#f5f5f5',
+            backgroundColor: colors.tableHeader,
           },
         }}
       />

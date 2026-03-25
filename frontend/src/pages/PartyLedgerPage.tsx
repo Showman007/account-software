@@ -24,6 +24,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { fetchPartyLedger, partiesApi } from '../api/resources.ts';
 import { useIsMobile } from '../hooks/useIsMobile.ts';
+import { useAppColors } from '../context/ThemeContext.tsx';
 
 interface TransformedTxn {
   id: number;
@@ -50,21 +51,17 @@ function transformTransactions(
     let credit = 0;
 
     if (type === 'inbound') {
-      // Purchase from supplier — we owe them (credit increases liability)
       credit = Number(t.amount || 0);
       balance += credit;
     } else if (type === 'outbound') {
-      // Sale to buyer — they owe us (debit increases receivable)
       debit = Number(t.amount || 0);
       balance += debit;
     } else if (type === 'payment') {
       const desc = t.description as string;
       if (desc?.includes('supplier') || desc?.includes('Payment to')) {
-        // We paid supplier — reduces what we owe (debit to clear liability)
         debit = Number(t.amount || 0);
         balance -= debit;
       } else {
-        // Buyer paid us — reduces what they owe (credit to clear receivable)
         credit = Number(t.amount || 0);
         balance -= credit;
       }
@@ -92,6 +89,7 @@ const typeChipColor: Record<string, 'info' | 'success' | 'warning' | 'default'> 
 
 export default function PartyLedgerPage() {
   const isMobile = useIsMobile();
+  const colors = useAppColors();
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
 
   const { data: partiesData } = useQuery({
@@ -153,7 +151,7 @@ export default function PartyLedgerPage() {
                 title="Total Debit"
                 value={totalDebit}
                 icon={<TrendingUpIcon />}
-                color="#C62828"
+                color={colors.cardRed}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -161,7 +159,7 @@ export default function PartyLedgerPage() {
                 title="Total Credit"
                 value={totalCredit}
                 icon={<TrendingDownIcon />}
-                color="#2E7D32"
+                color={colors.cardGreen}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -169,7 +167,7 @@ export default function PartyLedgerPage() {
                 title="Transactions"
                 value={transactions.length}
                 icon={<ReceiptIcon />}
-                color="#1565C0"
+                color={colors.cardBlue}
                 isCurrency={false}
               />
             </Grid>
@@ -178,7 +176,7 @@ export default function PartyLedgerPage() {
                 title="Closing Balance"
                 value={closingBalance}
                 icon={<AccountBalanceIcon />}
-                color={closingBalance >= 0 ? '#E65100' : '#2E7D32'}
+                color={closingBalance >= 0 ? colors.cardDeepOrange : colors.cardGreen}
               />
             </Grid>
           </Grid>
@@ -206,7 +204,7 @@ export default function PartyLedgerPage() {
           <TableContainer component={Paper}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableRow sx={{ backgroundColor: colors.tableHeader }}>
                   <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>#</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
@@ -218,7 +216,7 @@ export default function PartyLedgerPage() {
               </TableHead>
               <TableBody>
                 {/* Opening Balance Row */}
-                <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
+                <TableRow sx={{ backgroundColor: colors.openingRow }}>
                   <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} />
                   <TableCell colSpan={3} sx={{ fontWeight: 'bold' }}>Opening Balance</TableCell>
                   <TableCell />
@@ -247,10 +245,10 @@ export default function PartyLedgerPage() {
                         />
                       </TableCell>
                       <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{txn.description}</TableCell>
-                      <TableCell align="right" sx={{ color: txn.debit > 0 ? '#C62828' : 'text.secondary', fontWeight: txn.debit > 0 ? 500 : 400 }}>
+                      <TableCell align="right" sx={{ color: txn.debit > 0 ? colors.debit : 'text.secondary', fontWeight: txn.debit > 0 ? 500 : 400 }}>
                         {txn.debit > 0 ? formatINR(txn.debit) : '-'}
                       </TableCell>
-                      <TableCell align="right" sx={{ color: txn.credit > 0 ? '#2E7D32' : 'text.secondary', fontWeight: txn.credit > 0 ? 500 : 400 }}>
+                      <TableCell align="right" sx={{ color: txn.credit > 0 ? colors.credit : 'text.secondary', fontWeight: txn.credit > 0 ? 500 : 400 }}>
                         {txn.credit > 0 ? formatINR(txn.credit) : '-'}
                       </TableCell>
                       <TableCell align="right" sx={{ fontWeight: 500 }}>
@@ -262,13 +260,13 @@ export default function PartyLedgerPage() {
 
                 {/* Closing Balance Row */}
                 {transactions.length > 0 && (
-                  <TableRow sx={{ backgroundColor: '#fff3e0', borderTop: '2px solid #333' }}>
+                  <TableRow sx={{ backgroundColor: colors.closingRow, borderTop: `2px solid ${colors.borderStrong}` }}>
                     <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} />
                     <TableCell colSpan={3} sx={{ fontWeight: 'bold' }}>Closing Balance</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#C62828' }}>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: colors.debit }}>
                       {formatINR(totalDebit)}
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#2E7D32' }}>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: colors.credit }}>
                       {formatINR(totalCredit)}
                     </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>

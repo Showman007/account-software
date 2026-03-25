@@ -8,6 +8,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SummaryCard, { formatINR } from '../components/common/SummaryCard.tsx';
 import { fetchDashboard } from '../api/resources.ts';
+import { useAppColors } from '../context/ThemeContext.tsx';
 
 const millingColumns: GridColDef[] = [
   { field: 'key', headerName: 'Metric', flex: 1 },
@@ -20,6 +21,7 @@ const partnerColumns: GridColDef[] = [
 ];
 
 export default function DashboardPage() {
+  const colors = useAppColors();
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboard,
@@ -63,7 +65,7 @@ export default function DashboardPage() {
             title="Total Purchases"
             value={data.total_purchased}
             icon={<ShoppingCartIcon />}
-            color="#1565C0"
+            color={colors.cardBlue}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -71,7 +73,7 @@ export default function DashboardPage() {
             title="Total Sales"
             value={data.total_sold}
             icon={<SellIcon />}
-            color="#2E7D32"
+            color={colors.cardGreen}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -79,7 +81,7 @@ export default function DashboardPage() {
             title="Total Expenses"
             value={data.total_expenses}
             icon={<ReceiptIcon />}
-            color="#ED6C02"
+            color={colors.cardOrange}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -87,7 +89,7 @@ export default function DashboardPage() {
             title="Net Profit"
             value={data.net_profit}
             icon={<TrendingUpIcon />}
-            color={Number(data.net_profit) >= 0 ? '#2E7D32' : '#D32F2F'}
+            color={Number(data.net_profit) >= 0 ? colors.profit : colors.loss}
           />
         </Grid>
       </Grid>

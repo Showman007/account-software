@@ -43,6 +43,8 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useIsMobile } from '../hooks/useIsMobile.ts';
+import { useAppColors } from '../context/ThemeContext.tsx';
+import type { AppColors } from '../theme/colors.ts';
 import type { JournalEntry, JournalLine, JournalSummary, QueryParams } from '../types/models.ts';
 
 const entryTypeLabels: Record<string, string> = {
@@ -73,21 +75,26 @@ const entryTypeColors: Record<string, 'default' | 'primary' | 'secondary' | 'err
   reversal: 'error',
 };
 
-const accountTypeColors: Record<string, string> = {
-  asset: '#1565C0',
-  liability: '#E65100',
-  income: '#2E7D32',
-  expense: '#C62828',
-  equity: '#6A1B9A',
-};
+function getAccountTypeColors(colors: AppColors): Record<string, string> {
+  return {
+    asset: colors.accountAsset,
+    liability: colors.accountLiability,
+    income: colors.accountIncome,
+    expense: colors.accountExpense,
+    equity: colors.accountEquity,
+  };
+}
 
 // ─── Shared Components ──────────────────────────────────────
 
 function JournalLinesDetail({ lines }: { lines: JournalLine[] }) {
+  const colors = useAppColors();
+  const accountTypeColors = getAccountTypeColors(colors);
+
   return (
     <Table size="small" sx={{ ml: 4, mr: 4, width: 'auto' }}>
       <TableHead>
-        <TableRow sx={{ backgroundColor: '#fafafa' }}>
+        <TableRow sx={{ backgroundColor: colors.surfaceHover }}>
           <TableCell sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>Account</TableCell>
           <TableCell sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>Type</TableCell>
           <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>Debit</TableCell>
@@ -103,27 +110,27 @@ function JournalLinesDetail({ lines }: { lines: JournalLine[] }) {
                 label={line.account_type}
                 size="small"
                 sx={{
-                  backgroundColor: accountTypeColors[line.account_type] || '#757575',
+                  backgroundColor: accountTypeColors[line.account_type] || colors.badgeDefault,
                   color: 'white',
                   fontSize: '0.65rem',
                   height: 20,
                 }}
               />
             </TableCell>
-            <TableCell align="right" sx={{ fontSize: '0.8rem', py: 0.75, color: line.debit > 0 ? '#C62828' : 'text.secondary' }}>
+            <TableCell align="right" sx={{ fontSize: '0.8rem', py: 0.75, color: line.debit > 0 ? colors.debit : 'text.secondary' }}>
               {line.debit > 0 ? formatINR(line.debit) : '-'}
             </TableCell>
-            <TableCell align="right" sx={{ fontSize: '0.8rem', py: 0.75, color: line.credit > 0 ? '#2E7D32' : 'text.secondary' }}>
+            <TableCell align="right" sx={{ fontSize: '0.8rem', py: 0.75, color: line.credit > 0 ? colors.credit : 'text.secondary' }}>
               {line.credit > 0 ? formatINR(line.credit) : '-'}
             </TableCell>
           </TableRow>
         ))}
         <TableRow>
           <TableCell colSpan={2} sx={{ fontWeight: 'bold', fontSize: '0.8rem', borderBottom: 0 }}>Total</TableCell>
-          <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#C62828', borderBottom: 0 }}>
+          <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.8rem', color: colors.debit, borderBottom: 0 }}>
             {formatINR(lines.reduce((sum, l) => sum + Number(l.debit || 0), 0))}
           </TableCell>
-          <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#2E7D32', borderBottom: 0 }}>
+          <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.8rem', color: colors.credit, borderBottom: 0 }}>
             {formatINR(lines.reduce((sum, l) => sum + Number(l.credit || 0), 0))}
           </TableCell>
         </TableRow>
@@ -133,6 +140,7 @@ function JournalLinesDetail({ lines }: { lines: JournalLine[] }) {
 }
 
 function JournalRow({ entry, isExpanded, onToggle }: { entry: JournalEntry; isExpanded: boolean; onToggle: () => void }) {
+  const colors = useAppColors();
   const isReversal = entry.entry_type === 'reversal';
   return (
     <>
@@ -141,7 +149,7 @@ function JournalRow({ entry, isExpanded, onToggle }: { entry: JournalEntry; isEx
         sx={{
           cursor: 'pointer',
           '& > *': { borderBottom: isExpanded ? 'unset' : undefined },
-          backgroundColor: isReversal ? '#fff3f0' : undefined,
+          backgroundColor: isReversal ? colors.reversalRow : undefined,
           opacity: isReversal ? 0.85 : 1,
         }}
         onClick={onToggle}
@@ -171,7 +179,7 @@ function JournalRow({ entry, isExpanded, onToggle }: { entry: JournalEntry; isEx
       <TableRow>
         <TableCell colSpan={7} sx={{ py: 0, px: 0, borderBottom: isExpanded ? undefined : 'none' }}>
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <Box sx={{ py: 1.5, px: 2, backgroundColor: '#f8f9fa' }}>
+            <Box sx={{ py: 1.5, px: 2, backgroundColor: colors.detailBg }}>
               <JournalLinesDetail lines={entry.journal_lines} />
             </Box>
           </Collapse>
@@ -182,23 +190,24 @@ function JournalRow({ entry, isExpanded, onToggle }: { entry: JournalEntry; isEx
 }
 
 function SummaryCards({ summary }: { summary: JournalSummary }) {
+  const colors = useAppColors();
   return (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <SummaryCard title="Total Entries" value={summary.total_entries} icon={<ReceiptIcon />} color="#1565C0" isCurrency={false} />
+        <SummaryCard title="Total Entries" value={summary.total_entries} icon={<ReceiptIcon />} color={colors.cardBlue} isCurrency={false} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <SummaryCard title="Total Debit" value={summary.total_debit} icon={<TrendingUpIcon />} color="#C62828" />
+        <SummaryCard title="Total Debit" value={summary.total_debit} icon={<TrendingUpIcon />} color={colors.cardRed} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-        <SummaryCard title="Total Credit" value={summary.total_credit} icon={<TrendingDownIcon />} color="#2E7D32" />
+        <SummaryCard title="Total Credit" value={summary.total_credit} icon={<TrendingDownIcon />} color={colors.cardGreen} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
           title="Balance (D-C)"
           value={Number(summary.total_debit) - Number(summary.total_credit)}
           icon={<AccountBalanceIcon />}
-          color={Number(summary.total_debit) - Number(summary.total_credit) === 0 ? '#2E7D32' : '#C62828'}
+          color={Number(summary.total_debit) - Number(summary.total_credit) === 0 ? colors.credit : colors.debit}
         />
       </Grid>
     </Grid>
@@ -206,9 +215,10 @@ function SummaryCards({ summary }: { summary: JournalSummary }) {
 }
 
 function JournalTableHead() {
+  const colors = useAppColors();
   return (
     <TableHead>
-      <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+      <TableRow sx={{ backgroundColor: colors.tableHeader }}>
         <TableCell sx={{ width: 40, px: 1 }} />
         <TableCell sx={{ fontWeight: 'bold' }}>Journal #</TableCell>
         <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
@@ -375,6 +385,8 @@ function PaginatedView() {
 // ─── All Data View (new — all entries expanded) ─────────────
 
 function AllDataView() {
+  const colors = useAppColors();
+  const accountTypeColors = getAccountTypeColors(colors);
   const [params, setParams] = useState<QueryParams>({});
   const [search, setSearch] = useState('');
 
@@ -417,7 +429,7 @@ function AllDataView() {
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow sx={{ backgroundColor: colors.tableHeader }}>
                 <TableCell sx={{ fontWeight: 'bold' }}>Journal #</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
@@ -435,29 +447,29 @@ function AllDataView() {
                     key={`${entry.id}-${line.id}`}
                     sx={{
                       backgroundColor: entry.entry_type === 'reversal'
-                        ? (idx === 0 ? '#fff3f0' : '#fff0ec')
-                        : (idx === 0 ? '#fff' : '#fafafa'),
-                      borderTop: idx === 0 ? '2px solid #e0e0e0' : 'none',
+                        ? (idx === 0 ? colors.reversalRow : colors.reversalRowAlt)
+                        : (idx === 0 ? colors.surface : colors.surfaceHover),
+                      borderTop: idx === 0 ? `2px solid ${colors.border}` : 'none',
                       opacity: entry.entry_type === 'reversal' ? 0.85 : 1,
                     }}
                   >
                     {/* Show entry info only on first line */}
                     {idx === 0 ? (
                       <>
-                        <TableCell rowSpan={entry.journal_lines.length} sx={{ fontWeight: 500, whiteSpace: 'nowrap', verticalAlign: 'top', borderRight: '1px solid #e0e0e0' }}>
+                        <TableCell rowSpan={entry.journal_lines.length} sx={{ fontWeight: 500, whiteSpace: 'nowrap', verticalAlign: 'top', borderRight: `1px solid ${colors.border}` }}>
                           {entry.entry_number}
                         </TableCell>
-                        <TableCell rowSpan={entry.journal_lines.length} sx={{ whiteSpace: 'nowrap', verticalAlign: 'top', borderRight: '1px solid #e0e0e0' }}>
+                        <TableCell rowSpan={entry.journal_lines.length} sx={{ whiteSpace: 'nowrap', verticalAlign: 'top', borderRight: `1px solid ${colors.border}` }}>
                           {entry.date}
                         </TableCell>
-                        <TableCell rowSpan={entry.journal_lines.length} sx={{ verticalAlign: 'top', borderRight: '1px solid #e0e0e0' }}>
+                        <TableCell rowSpan={entry.journal_lines.length} sx={{ verticalAlign: 'top', borderRight: `1px solid ${colors.border}` }}>
                           <Chip
                             label={entryTypeLabels[entry.entry_type] ?? entry.entry_type}
                             color={entryTypeColors[entry.entry_type] ?? 'default'}
                             size="small"
                           />
                         </TableCell>
-                        <TableCell rowSpan={entry.journal_lines.length} sx={{ verticalAlign: 'top', borderRight: '1px solid #e0e0e0', maxWidth: 300, display: { xs: 'none', sm: 'table-cell' } }}>
+                        <TableCell rowSpan={entry.journal_lines.length} sx={{ verticalAlign: 'top', borderRight: `1px solid ${colors.border}`, maxWidth: 300, display: { xs: 'none', sm: 'table-cell' } }}>
                           {entry.narration}
                         </TableCell>
                       </>
@@ -468,17 +480,17 @@ function AllDataView() {
                         label={line.account_type}
                         size="small"
                         sx={{
-                          backgroundColor: accountTypeColors[line.account_type] || '#757575',
+                          backgroundColor: accountTypeColors[line.account_type] || colors.badgeDefault,
                           color: 'white',
                           fontSize: '0.65rem',
                           height: 20,
                         }}
                       />
                     </TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.85rem', color: line.debit > 0 ? '#C62828' : 'text.secondary' }}>
+                    <TableCell align="right" sx={{ fontSize: '0.85rem', color: line.debit > 0 ? colors.debit : 'text.secondary' }}>
                       {line.debit > 0 ? formatINR(line.debit) : '-'}
                     </TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.85rem', color: line.credit > 0 ? '#2E7D32' : 'text.secondary' }}>
+                    <TableCell align="right" sx={{ fontSize: '0.85rem', color: line.credit > 0 ? colors.credit : 'text.secondary' }}>
                       {line.credit > 0 ? formatINR(line.credit) : '-'}
                     </TableCell>
                   </TableRow>
@@ -486,12 +498,12 @@ function AllDataView() {
               ))}
               {/* Grand total row */}
               {summary && (
-                <TableRow sx={{ borderTop: '3px solid #333' }}>
+                <TableRow sx={{ borderTop: `3px solid ${colors.borderStrong}` }}>
                   <TableCell colSpan={6} sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Grand Total</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#C62828' }}>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.9rem', color: colors.debit }}>
                     {formatINR(summary.total_debit)}
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#2E7D32' }}>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.9rem', color: colors.credit }}>
                     {formatINR(summary.total_credit)}
                   </TableCell>
                 </TableRow>

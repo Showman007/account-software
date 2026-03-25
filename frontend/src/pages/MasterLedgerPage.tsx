@@ -20,6 +20,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import { fetchMasterLedger } from '../api/resources.ts';
 import { useIsMobile } from '../hooks/useIsMobile.ts';
+import { useAppColors } from '../context/ThemeContext.tsx';
 import type { LedgerEntry } from '../types/models.ts';
 
 interface BuyerEntry extends LedgerEntry {
@@ -34,6 +35,7 @@ interface SupplierEntry extends LedgerEntry {
 
 export default function MasterLedgerPage() {
   const isMobile = useIsMobile();
+  const colors = useAppColors();
   const { data, isLoading, error } = useQuery({
     queryKey: ['master_ledger'],
     queryFn: fetchMasterLedger,
@@ -67,16 +69,16 @@ export default function MasterLedgerPage() {
       {/* Summary */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <SummaryCard title="Total Billed (Sales)" value={totalBilled} icon={<TrendingUpIcon />} color="#2E7D32" />
+          <SummaryCard title="Total Billed (Sales)" value={totalBilled} icon={<TrendingUpIcon />} color={colors.cardGreen} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <SummaryCard title="Buyers Owe Us" value={totalBuyerOwed} icon={<AccountBalanceIcon />} color="#C62828" />
+          <SummaryCard title="Buyers Owe Us" value={totalBuyerOwed} icon={<AccountBalanceIcon />} color={colors.cardRed} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <SummaryCard title="Total Purchased" value={totalPurchased} icon={<TrendingDownIcon />} color="#E65100" />
+          <SummaryCard title="Total Purchased" value={totalPurchased} icon={<TrendingDownIcon />} color={colors.cardDeepOrange} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <SummaryCard title="We Owe Suppliers" value={totalSupplierOwed} icon={<AccountBalanceIcon />} color="#E65100" />
+          <SummaryCard title="We Owe Suppliers" value={totalSupplierOwed} icon={<AccountBalanceIcon />} color={colors.cardDeepOrange} />
         </Grid>
       </Grid>
 
@@ -88,7 +90,7 @@ export default function MasterLedgerPage() {
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow sx={{ backgroundColor: colors.tableHeader }}>
                 <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>#</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Party Name</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Village/City</TableCell>
@@ -112,7 +114,7 @@ export default function MasterLedgerPage() {
                       <TableCell sx={{ fontWeight: 500 }}>{b.party_name}</TableCell>
                       <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{b.village_city || '-'}</TableCell>
                       <TableCell align="right">{formatINR(b.total_billed || 0)}</TableCell>
-                      <TableCell align="right" sx={{ color: '#2E7D32' }}>{formatINR(b.total_received || 0)}</TableCell>
+                      <TableCell align="right" sx={{ color: colors.credit }}>{formatINR(b.total_received || 0)}</TableCell>
                       <TableCell align="right">
                         <Chip
                           label={formatINR(Math.abs(Number(b.balance)))}
@@ -123,13 +125,13 @@ export default function MasterLedgerPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow sx={{ backgroundColor: '#fff3e0', borderTop: '2px solid #333' }}>
+                  <TableRow sx={{ backgroundColor: colors.closingRow, borderTop: `2px solid ${colors.borderStrong}` }}>
                     <TableCell colSpan={3} sx={{ fontWeight: 'bold' }}>Total</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold' }}>{formatINR(totalBilled)}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#2E7D32' }}>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: colors.credit }}>
                       {formatINR(buyers.reduce((s, b) => s + Number(b.total_received || 0), 0))}
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#C62828' }}>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: colors.debit }}>
                       {formatINR(totalBuyerOwed)}
                     </TableCell>
                   </TableRow>
@@ -148,7 +150,7 @@ export default function MasterLedgerPage() {
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow sx={{ backgroundColor: colors.tableHeader }}>
                 <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>#</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Party Name</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Village/City</TableCell>
@@ -172,7 +174,7 @@ export default function MasterLedgerPage() {
                       <TableCell sx={{ fontWeight: 500 }}>{s.party_name}</TableCell>
                       <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{s.village_city || '-'}</TableCell>
                       <TableCell align="right">{formatINR(s.total_purchased || 0)}</TableCell>
-                      <TableCell align="right" sx={{ color: '#2E7D32' }}>{formatINR(s.total_paid || 0)}</TableCell>
+                      <TableCell align="right" sx={{ color: colors.credit }}>{formatINR(s.total_paid || 0)}</TableCell>
                       <TableCell align="right">
                         <Chip
                           label={formatINR(Math.abs(Number(s.balance)))}
@@ -183,13 +185,13 @@ export default function MasterLedgerPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow sx={{ backgroundColor: '#fff3e0', borderTop: '2px solid #333' }}>
+                  <TableRow sx={{ backgroundColor: colors.closingRow, borderTop: `2px solid ${colors.borderStrong}` }}>
                     <TableCell colSpan={3} sx={{ fontWeight: 'bold' }}>Total</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold' }}>{formatINR(totalPurchased)}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#2E7D32' }}>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: colors.credit }}>
                       {formatINR(suppliers.reduce((s, b) => s + Number(b.total_paid || 0), 0))}
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#E65100' }}>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: colors.cardDeepOrange }}>
                       {formatINR(totalSupplierOwed)}
                     </TableCell>
                   </TableRow>

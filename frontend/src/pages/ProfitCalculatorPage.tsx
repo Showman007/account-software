@@ -9,6 +9,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SummaryCard, { formatINR } from '../components/common/SummaryCard.tsx';
 import { fetchProfitCalculator } from '../api/resources.ts';
+import { useAppColors } from '../context/ThemeContext.tsx';
 
 const partnerColumns: GridColDef[] = [
   { field: 'name', headerName: 'Partner Name', flex: 1 },
@@ -18,6 +19,7 @@ const partnerColumns: GridColDef[] = [
 ];
 
 export default function ProfitCalculatorPage() {
+  const colors = useAppColors();
   const { data, isLoading, error } = useQuery({
     queryKey: ['profit_calculator'],
     queryFn: fetchProfitCalculator,
@@ -43,23 +45,23 @@ export default function ProfitCalculatorPage() {
       </Typography>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <SummaryCard title="Total Revenue" value={data.total_revenue} icon={<SellIcon />} color="#2E7D32" />
+          <SummaryCard title="Total Revenue" value={data.total_revenue} icon={<SellIcon />} color={colors.cardGreen} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <SummaryCard title="Total Purchases" value={data.total_purchases} icon={<ShoppingCartIcon />} color="#1565C0" />
+          <SummaryCard title="Total Purchases" value={data.total_purchases} icon={<ShoppingCartIcon />} color={colors.cardBlue} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <SummaryCard title="Milling Cost" value={data.total_milling_cost} icon={<PrecisionManufacturingIcon />} color="#ED6C02" />
+          <SummaryCard title="Milling Cost" value={data.total_milling_cost} icon={<PrecisionManufacturingIcon />} color={colors.cardOrange} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <SummaryCard title="Other Expenses" value={data.total_other_expenses} icon={<ReceiptIcon />} color="#9C27B0" />
+          <SummaryCard title="Other Expenses" value={data.total_other_expenses} icon={<ReceiptIcon />} color={colors.cardPurple} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <SummaryCard
             title="Net Profit"
             value={data.net_profit}
             icon={<TrendingUpIcon />}
-            color={data.net_profit >= 0 ? '#2E7D32' : '#D32F2F'}
+            color={data.net_profit >= 0 ? colors.profit : colors.loss}
           />
         </Grid>
       </Grid>

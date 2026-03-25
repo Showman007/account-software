@@ -42,6 +42,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 import DataArrayIcon from '@mui/icons-material/DataArray';
 import KeyIcon from '@mui/icons-material/Key';
 import { useIsMobile } from '../hooks/useIsMobile.ts';
+import { useAppColors } from '../context/ThemeContext.tsx';
 import { executeQuery, fetchTables } from '../api/resources.ts';
 import type { QueryResult, TableInfo } from '../api/resources.ts';
 import { toast } from 'react-toastify';
@@ -329,6 +330,7 @@ function isNumeric(val: string | number | boolean | null): boolean {
 
 export default function QueryRunnerPage() {
   const isMobile = useIsMobile();
+  const colors = useAppColors();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sql, setSql] = useState('SELECT * FROM parties LIMIT 20;');
   const [activeQuery, setActiveQuery] = useState<string | null>(null);
@@ -513,7 +515,7 @@ export default function QueryRunnerPage() {
           minWidth: SIDEBAR_WIDTH,
           borderRight: '1px solid',
           borderColor: 'divider',
-          bgcolor: '#fafbfc',
+          bgcolor: colors.qrSidebarBg,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -577,8 +579,8 @@ export default function QueryRunnerPage() {
                   border: 'none',
                   outline: 'none',
                   resize: 'none',
-                  backgroundColor: '#1e1e2e',
-                  color: '#cdd6f4',
+                  backgroundColor: colors.editorBg,
+                  color: colors.editorText,
                   boxSizing: 'border-box',
                   letterSpacing: '0.3px',
                 }}
@@ -591,7 +593,7 @@ export default function QueryRunnerPage() {
               px: 2, py: 1,
               borderTop: '1px solid', borderColor: 'divider',
               borderBottom: '1px solid',
-              bgcolor: '#f8f9fa',
+              bgcolor: colors.qrActionBarBg,
             }}>
               <Button
                 variant="contained"
@@ -602,8 +604,8 @@ export default function QueryRunnerPage() {
                 sx={{
                   textTransform: 'none',
                   minWidth: 100,
-                  bgcolor: '#22c55e',
-                  '&:hover': { bgcolor: '#16a34a' },
+                  bgcolor: colors.runBtnBg,
+                  '&:hover': { bgcolor: colors.runBtnHover },
                 }}
               >
                 {loading ? 'Running...' : 'Run'}
@@ -657,7 +659,7 @@ export default function QueryRunnerPage() {
               width: 300, minWidth: 300,
               borderLeft: '1px solid', borderColor: 'divider',
               overflowY: 'auto', maxHeight: 300,
-              bgcolor: '#fafbfc',
+              bgcolor: colors.qrSidebarBg,
             }}>
               <Box sx={{ px: 1.5, py: 1, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -721,7 +723,7 @@ export default function QueryRunnerPage() {
         </Box>
 
         {/* ─── Results Area ─── */}
-        <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#fff' }}>
+        <Box sx={{ flex: 1, overflow: 'auto', bgcolor: colors.qrResultsBg }}>
           {/* Error */}
           {error && (
             <Alert severity="error" sx={{ m: 2, borderRadius: 1 }} variant="outlined">
@@ -760,19 +762,19 @@ export default function QueryRunnerPage() {
           {/* Results Table */}
           {result && result.columns.length > 0 && result.row_count > 0 && (
             <TableContainer sx={{ maxHeight: '100%' }}>
-              <Table stickyHeader size="small" sx={{ '& td, & th': { borderColor: '#eee' } }}>
+              <Table stickyHeader size="small" sx={{ '& td, & th': { borderColor: colors.border } }}>
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{
-                      fontWeight: 600, bgcolor: '#f1f3f5', color: '#868e96',
+                      fontWeight: 600, bgcolor: colors.qrHeaderBg, color: colors.textSecondary,
                       fontSize: '0.7rem', minWidth: 36, textAlign: 'center',
-                      position: 'sticky', left: 0, zIndex: 3, borderRight: '1px solid #e0e0e0',
+                      position: 'sticky', left: 0, zIndex: 3, borderRight: `1px solid ${colors.border}`,
                     }}>
                       #
                     </TableCell>
                     {result.columns.map((col) => (
                       <TableCell key={col} sx={{
-                        fontWeight: 700, bgcolor: '#f1f3f5',
+                        fontWeight: 700, bgcolor: colors.qrHeaderBg,
                         fontSize: '0.75rem', whiteSpace: 'nowrap',
                         letterSpacing: '0.3px', py: 1,
                       }}>
@@ -784,13 +786,13 @@ export default function QueryRunnerPage() {
                 <TableBody>
                   {result.rows.map((row, i) => (
                     <TableRow key={i} hover sx={{
-                      '&:nth-of-type(even)': { bgcolor: '#fafbfc' },
+                      '&:nth-of-type(even)': { bgcolor: colors.qrEvenRowBg },
                       '&:hover': { bgcolor: (t) => alpha(t.palette.primary.main, 0.04) },
                     }}>
                       <TableCell sx={{
-                        color: '#adb5bd', fontSize: '0.7rem', textAlign: 'center',
+                        color: colors.qrRowNumberColor, fontSize: '0.7rem', textAlign: 'center',
                         position: 'sticky', left: 0, bgcolor: 'inherit', zIndex: 1,
-                        borderRight: '1px solid #e0e0e0',
+                        borderRight: `1px solid ${colors.border}`,
                       }}>
                         {i + 1}
                       </TableCell>
@@ -811,10 +813,10 @@ export default function QueryRunnerPage() {
                               fontFamily: (numeric || isNull) ? '"JetBrains Mono", monospace' : 'inherit',
                               fontSize: '0.8rem',
                               textAlign: numeric ? 'right' : 'left',
-                              color: isNull ? '#ced4da' : isMismatch ? '#e03131' : isReversal ? '#e03131' : (isStatus && !isMismatch) ? '#2f9e44' : 'inherit',
+                              color: isNull ? colors.nullText : isMismatch ? colors.errorText : isReversal ? colors.errorText : (isStatus && !isMismatch) ? colors.successText : 'inherit',
                               fontStyle: isNull ? 'italic' : 'normal',
                               fontWeight: (isStatus || isReversal) ? 700 : numeric ? 500 : 400,
-                              bgcolor: isMismatch ? '#fff5f5' : isReversal ? '#fff5f5' : 'inherit',
+                              bgcolor: isMismatch ? colors.errorRowBg : isReversal ? colors.errorRowBg : 'inherit',
                               py: 0.75,
                             }}
                           >
@@ -835,7 +837,7 @@ export default function QueryRunnerPage() {
           display: 'flex', alignItems: 'center', gap: 2,
           px: 2, py: 0.5,
           borderTop: '1px solid', borderColor: 'divider',
-          bgcolor: '#f8f9fa',
+          bgcolor: colors.qrStatusBarBg,
           minHeight: 28,
         }}>
           <Typography variant="caption" color="text.disabled" sx={{ fontFamily: 'monospace', fontSize: '0.65rem' }}>

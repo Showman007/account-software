@@ -32,6 +32,7 @@ import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { paymentsApi, reversePayment } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
+import { useAppColors } from '../context/ThemeContext.tsx';
 import type { Payment, QueryParams } from '../types/models.ts';
 
 const directionOptions = [
@@ -41,6 +42,7 @@ const directionOptions = [
 
 export default function PaymentsPage() {
   const { isAdmin } = useAuth();
+  const colors = useAppColors();
   const queryClient = useQueryClient();
   const { parties, paymentModes, partyMap, paymentModeMap } = useReferenceData();
 
@@ -252,18 +254,18 @@ export default function PaymentsPage() {
           return '';
         }}
         sx={{
-          backgroundColor: 'white',
-          '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5' },
+          backgroundColor: colors.surface,
+          '& .MuiDataGrid-columnHeaders': { backgroundColor: colors.tableHeader },
           '& .row-reversed': {
-            backgroundColor: '#fff3f0',
+            backgroundColor: colors.reversalRow,
             opacity: 0.7,
             textDecoration: 'line-through',
-            '&:hover': { backgroundColor: '#ffe8e4' },
+            '&:hover': { backgroundColor: colors.reversalRowHover },
           },
           '& .row-reversal': {
-            backgroundColor: '#fff8e1',
+            backgroundColor: colors.pendingRow,
             fontStyle: 'italic',
-            '&:hover': { backgroundColor: '#fff3cd' },
+            '&:hover': { backgroundColor: colors.pendingRowHover },
           },
         }}
       />
@@ -290,12 +292,12 @@ export default function PaymentsPage() {
 
       {/* Reverse Confirmation Dialog */}
       <Dialog open={reverseDialogOpen} onClose={() => setReverseDialogOpen(false)}>
-        <DialogTitle sx={{ color: '#C62828' }}>Reverse Payment</DialogTitle>
+        <DialogTitle sx={{ color: colors.debit }}>Reverse Payment</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Are you sure you want to reverse <strong>Payment #{reverseTarget?.id}</strong>?
           </DialogContentText>
-          <Box sx={{ mt: 2, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+          <Box sx={{ mt: 2, p: 2, backgroundColor: colors.surfaceAlt, borderRadius: 1 }}>
             <Typography variant="body2"><strong>Party:</strong> {reverseTarget ? partyMap.get(reverseTarget.party_id)?.name : ''}</Typography>
             <Typography variant="body2"><strong>Amount:</strong> {reverseTarget ? formatINR(reverseTarget.amount) : ''}</Typography>
             <Typography variant="body2">

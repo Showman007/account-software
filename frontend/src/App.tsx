@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/material/styles';
@@ -7,7 +8,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import theme from './theme/theme.ts';
+import { getTheme } from './theme/theme.ts';
+import { ThemeContextProvider, useThemeMode } from './context/ThemeContext.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
 import ProtectedRoute from './components/layout/ProtectedRoute.tsx';
 import AppLayout from './components/layout/AppLayout.tsx';
@@ -45,52 +47,63 @@ const queryClient = new QueryClient({
   },
 });
 
+function ThemedApp() {
+  const { mode } = useThemeMode();
+  const theme = useMemo(() => getTheme(mode), [mode]);
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/parties" element={<PartiesPage />} />
+                <Route path="/inbound" element={<InboundPage />} />
+                <Route path="/outbound" element={<OutboundPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/milling" element={<MillingPage />} />
+                <Route path="/expenses" element={<ExpensesPage />} />
+                <Route path="/stock" element={<StockPage />} />
+                <Route path="/partners" element={<PartnersPage />} />
+                <Route path="/credit-transactions" element={<CreditTransactionsPage />} />
+                <Route path="/master-ledger" element={<MasterLedgerPage />} />
+                <Route path="/party-ledger" element={<PartyLedgerPage />} />
+                <Route path="/profit-calculator" element={<ProfitCalculatorPage />} />
+                <Route path="/journals" element={<JournalPage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/units" element={<UnitsPage />} />
+                <Route path="/expense-categories" element={<ExpenseCategoriesPage />} />
+                <Route path="/payment-modes" element={<PaymentModesPage />} />
+                <Route path="/import-export" element={<ImportExportPage />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/query-runner" element={<QueryRunnerPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+          <ToastContainer position="top-right" autoClose={3000} />
+        </AuthProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <AuthProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/parties" element={<PartiesPage />} />
-                  <Route path="/inbound" element={<InboundPage />} />
-                  <Route path="/outbound" element={<OutboundPage />} />
-                  <Route path="/payments" element={<PaymentsPage />} />
-                  <Route path="/milling" element={<MillingPage />} />
-                  <Route path="/expenses" element={<ExpensesPage />} />
-                  <Route path="/stock" element={<StockPage />} />
-                  <Route path="/partners" element={<PartnersPage />} />
-                  <Route path="/credit-transactions" element={<CreditTransactionsPage />} />
-                  <Route path="/master-ledger" element={<MasterLedgerPage />} />
-                  <Route path="/party-ledger" element={<PartyLedgerPage />} />
-                  <Route path="/profit-calculator" element={<ProfitCalculatorPage />} />
-                  <Route path="/journals" element={<JournalPage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/units" element={<UnitsPage />} />
-                  <Route path="/expense-categories" element={<ExpenseCategoriesPage />} />
-                  <Route path="/payment-modes" element={<PaymentModesPage />} />
-                  <Route path="/import-export" element={<ImportExportPage />} />
-                  <Route path="/users" element={<UsersPage />} />
-                  <Route path="/query-runner" element={<QueryRunnerPage />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-            <ToastContainer position="top-right" autoClose={3000} />
-          </AuthProvider>
-        </LocalizationProvider>
-      </ThemeProvider>
+      <ThemeContextProvider>
+        <ThemedApp />
+      </ThemeContextProvider>
     </QueryClientProvider>
   );
 }
