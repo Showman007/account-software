@@ -27,9 +27,9 @@ class MasterLedgerService
       payments_received = date_scope(Payment.active.where(party_id: party.id, direction: :receipt_from_buyer))
 
       total_billed = outbound.sum(:total_bill)
-      total_received_from_outbound = outbound.sum(:received)
-      total_received_from_payments = payments_received.sum(:amount)
-      total_received = total_received_from_outbound + total_received_from_payments
+      # Only use payments table as source of truth for received amounts.
+      # outbound.received is an advance/inline field — already included via payments if a payment record was created.
+      total_received = payments_received.sum(:amount)
       balance = total_billed - total_received
 
       {
@@ -51,9 +51,9 @@ class MasterLedgerService
       payments_made = date_scope(Payment.active.where(party_id: party.id, direction: :payment_to_supplier))
 
       total_purchased = inbound.sum(:net_amt)
-      total_paid_from_inbound = inbound.sum(:paid)
-      total_paid_from_payments = payments_made.sum(:amount)
-      total_paid = total_paid_from_inbound + total_paid_from_payments
+      # Only use payments table as source of truth for paid amounts.
+      # inbound.paid is an advance/inline field — already included via payments if a payment record was created.
+      total_paid = payments_made.sum(:amount)
       balance = total_purchased - total_paid
 
       {
