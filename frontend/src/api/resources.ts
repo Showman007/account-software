@@ -134,3 +134,26 @@ export function getExportUrl(type: string, fromDate?: string, toDate?: string): 
   const qs = params.toString();
   return `${base}/exports/${type}${qs ? `?${qs}` : ''}`;
 }
+
+// Query Runner
+export interface QueryResult {
+  columns: string[];
+  rows: (string | number | boolean | null)[][];
+  row_count: number;
+  duration_ms: number;
+}
+
+export interface TableInfo {
+  name: string;
+  columns: { name: string; type: string; nullable: boolean }[];
+}
+
+export async function executeQuery(sql: string): Promise<QueryResult> {
+  const response = await apiClient.post('/query_runner', { sql });
+  return response.data;
+}
+
+export async function fetchTables(): Promise<TableInfo[]> {
+  const response = await apiClient.get('/query_runner/tables');
+  return response.data.tables;
+}

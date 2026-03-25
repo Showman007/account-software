@@ -34,6 +34,7 @@ import PaymentModesPage from './pages/PaymentModesPage.tsx';
 import ImportExportPage from './pages/ImportExportPage.tsx';
 import UsersPage from './pages/UsersPage.tsx';
 import JournalPage from './pages/JournalPage.tsx';
+import QueryRunnerPage from './pages/QueryRunnerPage.tsx';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,7 @@ function App() {
                   <Route path="/payment-modes" element={<PaymentModesPage />} />
                   <Route path="/import-export" element={<ImportExportPage />} />
                   <Route path="/users" element={<UsersPage />} />
+                  <Route path="/query-runner" element={<QueryRunnerPage />} />
                 </Route>
               </Routes>
             </BrowserRouter>

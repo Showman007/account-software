@@ -40,6 +40,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const DRAWER_WIDTH = 260;
@@ -106,6 +107,7 @@ const navGroups: NavGroup[] = [
     title: 'Data',
     items: [
       { label: 'Import / Export', path: '/import-export', icon: <ImportExportIcon /> },
+      { label: 'Query Runner', path: '/query-runner', icon: <TerminalIcon /> },
       { label: 'Users', path: '/users', icon: <AdminPanelSettingsIcon /> },
     ],
   },

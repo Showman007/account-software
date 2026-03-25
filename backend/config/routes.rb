@@ -49,6 +49,10 @@ Rails.application.routes.draw do
         end
       end
 
+      # Query Runner (admin only)
+      post 'query_runner', to: 'query_runner#execute'
+      get 'query_runner/tables', to: 'query_runner#tables'
+
       # Reports & Analytics
       get 'dashboard', to: 'dashboard#index'
       get 'master_ledger', to: 'master_ledger#index'
