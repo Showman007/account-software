@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rails-backend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd backend && bundle exec rails server -p 3000 -b 0.0.0.0"],
+      "port": 3000
+    },
+    {
+      "name": "react-frontend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd frontend && npm run dev -- --port 5173"],
+      "port": 5173
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+class PartnerPolicy < ApplicationPolicy
+end

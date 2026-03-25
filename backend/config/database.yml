@@ -1,0 +1,20 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV['DATABASE_URL'] %>
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  username: <%= ENV.fetch("DB_USERNAME") { "ricemill" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "ricemill_dev_2024" } %>
+
+development:
+  <<: *default
+  database: ricemill_development
+
+test:
+  <<: *default
+  database: ricemill_test
+
+production:
+  <<: *default
+  database: ricemill_production
