@@ -80,6 +80,7 @@ export default function PartnersPage() {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete partner "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id', 'date_joined', 'profit_share_rate']}
       />
       {dialogOpen && (
         <FormDialog

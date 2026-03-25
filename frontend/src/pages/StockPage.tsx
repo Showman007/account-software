@@ -83,6 +83,7 @@ export default function StockPage() {
         onPaginationChange={(m) => crud.updateParams({ page: m.page + 1, per_page: m.pageSize })}
         onEdit={isAdmin ? (row) => { setEditing(row); setDialogOpen(true); } : undefined}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id', 'unit_id', 'opening_stock', 'total_inbound', 'from_milling', 'total_outbound', 'min_level']}
         actions={
           isAdmin ? (
             <Button

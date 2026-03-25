@@ -70,6 +70,7 @@ export default function MillingPage() {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this milling batch?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id', 'milling_cost', 'broken_rice_qty', 'rice_bran_qty', 'husk_qty', 'rice_flour_qty', 'total_output', 'loss_diff']}
       />
       {dialogOpen && (
         <FormDialog

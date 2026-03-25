@@ -44,6 +44,7 @@ export default function ExpenseCategoriesPage() {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete category "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id']}
       />
       {dialogOpen && (
         <FormDialog

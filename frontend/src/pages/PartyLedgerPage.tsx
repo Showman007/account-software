@@ -23,6 +23,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { fetchPartyLedger, partiesApi } from '../api/resources.ts';
+import { useIsMobile } from '../hooks/useIsMobile.ts';
 
 interface TransformedTxn {
   id: number;
@@ -90,6 +91,7 @@ const typeChipColor: Record<string, 'info' | 'success' | 'warning' | 'default'> 
 };
 
 export default function PartyLedgerPage() {
+  const isMobile = useIsMobile();
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
 
   const { data: partiesData } = useQuery({
@@ -134,7 +136,7 @@ export default function PartyLedgerPage() {
         getOptionLabel={(opt) => opt.label}
         onChange={(_e, val) => setSelectedPartyId(val?.id ?? null)}
         renderInput={(params) => <TextField {...params} label="Select Party" />}
-        sx={{ mb: 3, maxWidth: 400 }}
+        sx={{ mb: 3, maxWidth: { xs: '100%', sm: 400 } }}
       />
       {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -205,10 +207,10 @@ export default function PartyLedgerPage() {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                  <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>#</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Description</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 'bold' }}>Debit</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 'bold' }}>Credit</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 'bold' }}>Balance</TableCell>
@@ -217,7 +219,7 @@ export default function PartyLedgerPage() {
               <TableBody>
                 {/* Opening Balance Row */}
                 <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
-                  <TableCell />
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} />
                   <TableCell colSpan={3} sx={{ fontWeight: 'bold' }}>Opening Balance</TableCell>
                   <TableCell />
                   <TableCell />
@@ -235,7 +237,7 @@ export default function PartyLedgerPage() {
                 ) : (
                   transactions.map((txn) => (
                     <TableRow key={txn.id} hover>
-                      <TableCell>{txn.id}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{txn.id}</TableCell>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>{txn.date}</TableCell>
                       <TableCell>
                         <Chip
@@ -244,7 +246,7 @@ export default function PartyLedgerPage() {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{txn.description}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{txn.description}</TableCell>
                       <TableCell align="right" sx={{ color: txn.debit > 0 ? '#C62828' : 'text.secondary', fontWeight: txn.debit > 0 ? 500 : 400 }}>
                         {txn.debit > 0 ? formatINR(txn.debit) : '-'}
                       </TableCell>
@@ -261,7 +263,7 @@ export default function PartyLedgerPage() {
                 {/* Closing Balance Row */}
                 {transactions.length > 0 && (
                   <TableRow sx={{ backgroundColor: '#fff3e0', borderTop: '2px solid #333' }}>
-                    <TableCell />
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} />
                     <TableCell colSpan={3} sx={{ fontWeight: 'bold' }}>Closing Balance</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold', color: '#C62828' }}>
                       {formatINR(totalDebit)}

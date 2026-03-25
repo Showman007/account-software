@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Box, Button, Typography, TextField, InputAdornment, IconButton } from '@mui/material';
+import { useState, useMemo } from 'react';
+import { Box, Button, Typography, TextField, InputAdornment, IconButton, useTheme, useMediaQuery } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
@@ -22,6 +22,7 @@ interface DataTableProps<T> {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   actions?: React.ReactNode;
+  mobileHiddenColumns?: string[];
 }
 
 export default function DataTable<T extends { id: number }>({
@@ -38,9 +39,12 @@ export default function DataTable<T extends { id: number }>({
   searchValue,
   onSearchChange,
   actions,
+  mobileHiddenColumns,
 }: DataTableProps<T>) {
   const { isAdmin } = useAuth();
   const [search, setSearch] = useState(searchValue ?? '');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && onSearchChange) {
@@ -51,7 +55,7 @@ export default function DataTable<T extends { id: number }>({
   const actionColumn: GridColDef = {
     field: 'actions',
     headerName: 'Actions',
-    width: 120,
+    width: isMobile ? 80 : 120,
     sortable: false,
     filterable: false,
     renderCell: (params) => (
@@ -72,17 +76,22 @@ export default function DataTable<T extends { id: number }>({
 
   const allColumns = isAdmin && (onEdit || onDelete) ? [...columns, actionColumn] : columns;
 
+  const columnVisibilityModel = useMemo(() => {
+    if (!isMobile || !mobileHiddenColumns) return {};
+    return Object.fromEntries(mobileHiddenColumns.map((f) => [f, false]));
+  }, [isMobile, mobileHiddenColumns]);
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" fontWeight="bold">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
           {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           {actions}
           {isAdmin && onAdd && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
-              Add New
+            <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd} size={isMobile ? 'small' : 'medium'}>
+              {isMobile ? 'Add' : 'Add New'}
             </Button>
           )}
         </Box>
@@ -104,7 +113,7 @@ export default function DataTable<T extends { id: number }>({
                 ),
               },
             }}
-            sx={{ width: 300 }}
+            sx={{ width: { xs: '100%', sm: 300 } }}
           />
         </Box>
       )}
@@ -119,6 +128,7 @@ export default function DataTable<T extends { id: number }>({
         pageSizeOptions={[10, 25, 50]}
         disableRowSelectionOnClick
         autoHeight
+        columnVisibilityModel={columnVisibilityModel}
         sx={{
           backgroundColor: 'white',
           '& .MuiDataGrid-columnHeaders': {

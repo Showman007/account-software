@@ -35,7 +35,7 @@ export default function LoginPage() {
         backgroundColor: '#F5F5F5',
       }}
     >
-      <Card sx={{ width: 400 }}>
+      <Card sx={{ width: { xs: '100%', sm: 400 }, mx: { xs: 2, sm: 0 } }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h4" align="center" fontWeight="bold" color="primary" gutterBottom>
             Rice Mill Katha

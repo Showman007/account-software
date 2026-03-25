@@ -32,6 +32,48 @@ const theme = createTheme({
         },
       },
     },
+    MuiDataGrid: {
+      styleOverrides: {
+        root: {
+          '@media (max-width: 600px)': {
+            fontSize: '0.75rem',
+            '& .MuiDataGrid-cell': {
+              padding: '4px 6px',
+            },
+            '& .MuiDataGrid-columnHeader': {
+              padding: '4px 6px',
+            },
+            '& .MuiDataGrid-columnHeaderTitle': {
+              fontSize: '0.75rem',
+              fontWeight: 600,
+            },
+          },
+        },
+      },
+    },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          overflowX: 'auto',
+        },
+      },
+    },
+    MuiTable: {
+      styleOverrides: {
+        root: {
+          '@media (max-width: 600px)': {
+            '& .MuiTableCell-root': {
+              padding: '6px 8px',
+              fontSize: '0.75rem',
+            },
+            '& .MuiTableCell-head': {
+              fontSize: '0.75rem',
+              fontWeight: 600,
+            },
+          },
+        },
+      },
+    },
   },
 });
 

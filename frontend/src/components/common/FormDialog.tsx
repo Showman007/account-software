@@ -6,7 +6,12 @@ import {
   DialogActions,
   Button,
   CircularProgress,
+  IconButton,
+  Box,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useForm, FormProvider } from 'react-hook-form';
 import type { ReactNode } from 'react';
 
@@ -30,6 +35,8 @@ export default function FormDialog({
   isLoading,
 }: FormDialogProps) {
   const methods = useForm({ defaultValues: defaultValues ?? {} });
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (defaultValues) {
@@ -42,10 +49,19 @@ export default function FormDialog({
   });
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobile}>
       <FormProvider {...methods}>
         <form onSubmit={handleFormSubmit}>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              {title}
+              {isMobile && (
+                <IconButton edge="end" onClick={onClose} aria-label="close">
+                  <CloseIcon />
+                </IconButton>
+              )}
+            </Box>
+          </DialogTitle>
           <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             {children}
           </DialogContent>

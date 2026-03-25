@@ -84,6 +84,7 @@ export default function InboundPage() {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id', 'village', 'qty', 'unit_id', 'rate', 'gross_amt', 'moisture_pct', 'paid']}
       />
       {dialogOpen && (
         <FormDialog

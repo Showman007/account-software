@@ -211,11 +211,11 @@ export default function AppLayout() {
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             Rice Mill Katha Book
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2 }}>
+          <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
             {user?.email}
           </Typography>
-          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
-            Logout
+          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ minWidth: { xs: 'auto', sm: 64 } }}>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Logout</Box>
           </Button>
         </Toolbar>
       </AppBar>
@@ -247,10 +247,11 @@ export default function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 1, sm: 2, md: 3 },
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           mt: '64px',
           minHeight: 'calc(100vh - 64px)',
+          overflow: 'hidden',
           backgroundColor: 'background.default',
         }}
       >

@@ -93,6 +93,7 @@ export default function PartiesPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id', 'village_city', 'bank']}
       />
       {dialogOpen && (
         <FormDialog

@@ -21,10 +21,12 @@ import {
   Tooltip,
   Divider,
   Badge,
+  Drawer,
   alpha,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StorageIcon from '@mui/icons-material/Storage';
+import MenuIcon from '@mui/icons-material/Menu';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -39,6 +41,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import TimerIcon from '@mui/icons-material/Timer';
 import DataArrayIcon from '@mui/icons-material/DataArray';
 import KeyIcon from '@mui/icons-material/Key';
+import { useIsMobile } from '../hooks/useIsMobile.ts';
 import { executeQuery, fetchTables } from '../api/resources.ts';
 import type { QueryResult, TableInfo } from '../api/resources.ts';
 import { toast } from 'react-toastify';
@@ -325,6 +328,8 @@ function isNumeric(val: string | number | boolean | null): boolean {
 }
 
 export default function QueryRunnerPage() {
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sql, setSql] = useState('SELECT * FROM parties LIMIT 20;');
   const [activeQuery, setActiveQuery] = useState<string | null>(null);
   const [result, setResult] = useState<QueryResult | null>(null);
@@ -406,98 +411,116 @@ export default function QueryRunnerPage() {
   const selectQuery = (label: string, querySql: string) => {
     setSql(querySql);
     setActiveQuery(label);
+    if (isMobile) setSidebarOpen(false);
   };
 
-  return (
-    <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)', mx: -3, mt: -3, overflow: 'hidden' }}>
-
-      {/* ─── Left Sidebar: Saved Queries ─── */}
-      <Box sx={{
-        width: SIDEBAR_WIDTH,
-        minWidth: SIDEBAR_WIDTH,
-        borderRight: '1px solid',
-        borderColor: 'divider',
-        bgcolor: '#fafbfc',
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        {/* Header */}
-        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
-            Saved Queries
-          </Typography>
-        </Box>
-
-        {/* Query Groups */}
-        <List dense disablePadding sx={{ flex: 1 }}>
-          {QUERY_GROUPS.map((group) => (
-            <Box key={group.group}>
-              <ListItemButton
-                onClick={() => setExpandedGroup(expandedGroup === group.group ? '' : group.group)}
-                sx={{ py: 0.75, px: 2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 28, color: expandedGroup === group.group ? 'primary.main' : 'text.secondary' }}>
-                  {GROUP_ICONS[group.group] || <BoltIcon fontSize="small" />}
-                </ListItemIcon>
-                <ListItemText
-                  primary={group.group}
-                  primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }}
-                />
-                <Badge badgeContent={group.queries.length} color="default" sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', minWidth: 18, height: 18 } }} />
-                {expandedGroup === group.group ? <ExpandLess sx={{ fontSize: 18, ml: 0.5 }} /> : <ExpandMore sx={{ fontSize: 18, ml: 0.5 }} />}
-              </ListItemButton>
-              <Collapse in={expandedGroup === group.group}>
-                <List dense disablePadding>
-                  {group.queries.map((q) => (
-                    <ListItemButton
-                      key={q.label}
-                      selected={activeQuery === q.label}
-                      onClick={() => selectQuery(q.label, q.sql)}
-                      sx={{
-                        pl: 4.5, py: 0.5,
-                        '&.Mui-selected': { bgcolor: (t) => alpha(t.palette.primary.main, 0.1), borderRight: '3px solid', borderColor: 'primary.main' },
-                        '&:hover': { bgcolor: (t) => alpha(t.palette.primary.main, 0.04) },
-                      }}
-                    >
-                      <ListItemText
-                        primary={q.label}
-                        secondary={q.description}
-                        primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: activeQuery === q.label ? 700 : 400 }}
-                        secondaryTypographyProps={{ fontSize: '0.65rem', noWrap: true }}
-                      />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
-            </Box>
-          ))}
-        </List>
-
-        {/* History */}
-        {queryHistory.length > 0 && (
-          <>
-            <Divider />
-            <Box sx={{ px: 2, py: 1 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                History
-              </Typography>
-            </Box>
-            <List dense disablePadding sx={{ maxHeight: 150, overflowY: 'auto' }}>
-              {queryHistory.map((h, i) => (
-                <ListItemButton key={i} sx={{ py: 0.25, px: 2 }} onClick={() => setSql(h.sql)}>
-                  <ListItemText
-                    primary={h.sql}
-                    secondary={`${h.rows} rows \u00b7 ${h.ms}ms`}
-                    primaryTypographyProps={{ fontSize: '0.7rem', fontFamily: 'monospace', noWrap: true }}
-                    secondaryTypographyProps={{ fontSize: '0.6rem' }}
-                  />
-                </ListItemButton>
-              ))}
-            </List>
-          </>
-        )}
+  const sidebarContent = () => (
+    <>
+      {/* Header */}
+      <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+          Saved Queries
+        </Typography>
       </Box>
+
+      {/* Query Groups */}
+      <List dense disablePadding sx={{ flex: 1 }}>
+        {QUERY_GROUPS.map((group) => (
+          <Box key={group.group}>
+            <ListItemButton
+              onClick={() => setExpandedGroup(expandedGroup === group.group ? '' : group.group)}
+              sx={{ py: 0.75, px: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 28, color: expandedGroup === group.group ? 'primary.main' : 'text.secondary' }}>
+                {GROUP_ICONS[group.group] || <BoltIcon fontSize="small" />}
+              </ListItemIcon>
+              <ListItemText
+                primary={group.group}
+                primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }}
+              />
+              <Badge badgeContent={group.queries.length} color="default" sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', minWidth: 18, height: 18 } }} />
+              {expandedGroup === group.group ? <ExpandLess sx={{ fontSize: 18, ml: 0.5 }} /> : <ExpandMore sx={{ fontSize: 18, ml: 0.5 }} />}
+            </ListItemButton>
+            <Collapse in={expandedGroup === group.group}>
+              <List dense disablePadding>
+                {group.queries.map((q) => (
+                  <ListItemButton
+                    key={q.label}
+                    selected={activeQuery === q.label}
+                    onClick={() => selectQuery(q.label, q.sql)}
+                    sx={{
+                      pl: 4.5, py: 0.5,
+                      '&.Mui-selected': { bgcolor: (t) => alpha(t.palette.primary.main, 0.1), borderRight: '3px solid', borderColor: 'primary.main' },
+                      '&:hover': { bgcolor: (t) => alpha(t.palette.primary.main, 0.04) },
+                    }}
+                  >
+                    <ListItemText
+                      primary={q.label}
+                      secondary={q.description}
+                      primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: activeQuery === q.label ? 700 : 400 }}
+                      secondaryTypographyProps={{ fontSize: '0.65rem', noWrap: true }}
+                    />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Collapse>
+          </Box>
+        ))}
+      </List>
+
+      {/* History */}
+      {queryHistory.length > 0 && (
+        <>
+          <Divider />
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              History
+            </Typography>
+          </Box>
+          <List dense disablePadding sx={{ maxHeight: 150, overflowY: 'auto' }}>
+            {queryHistory.map((h, i) => (
+              <ListItemButton key={i} sx={{ py: 0.25, px: 2 }} onClick={() => { setSql(h.sql); if (isMobile) setSidebarOpen(false); }}>
+                <ListItemText
+                  primary={h.sql}
+                  secondary={`${h.rows} rows \u00b7 ${h.ms}ms`}
+                  primaryTypographyProps={{ fontSize: '0.7rem', fontFamily: 'monospace', noWrap: true }}
+                  secondaryTypographyProps={{ fontSize: '0.6rem' }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </>
+      )}
+    </>
+  );
+
+  return (
+    <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)', mx: { xs: 0, md: -3 }, mt: { xs: 0, md: -3 }, overflow: 'hidden' }}>
+
+      {/* ─── Left Sidebar: Saved Queries (rendered as Drawer on mobile, inline on desktop) ─── */}
+      {isMobile ? (
+        <Drawer
+          anchor="left"
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          PaperProps={{ sx: { width: SIDEBAR_WIDTH } }}
+        >
+          {sidebarContent()}
+        </Drawer>
+      ) : (
+        <Box sx={{
+          width: SIDEBAR_WIDTH,
+          minWidth: SIDEBAR_WIDTH,
+          borderRight: '1px solid',
+          borderColor: 'divider',
+          bgcolor: '#fafbfc',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {sidebarContent()}
+        </Box>
+      )}
 
       {/* ─── Main Area ─── */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -509,6 +532,11 @@ export default function QueryRunnerPage() {
           borderBottom: '1px solid', borderColor: 'divider',
           bgcolor: 'background.paper',
         }}>
+          {isMobile && (
+            <IconButton size="small" onClick={() => setSidebarOpen(true)} sx={{ mr: 0.5 }}>
+              <MenuIcon />
+            </IconButton>
+          )}
           <DataArrayIcon color="primary" />
           <Typography variant="h6" fontWeight="bold" sx={{ flexGrow: 1 }}>
             Query Runner

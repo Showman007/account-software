@@ -90,6 +90,7 @@ export default function CreditTransactionsPage() {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this transaction?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id', 'credit_received', 'principal_returned', 'profit_paid', 'payment_mode_id', 'used_for']}
       />
       {dialogOpen && (
         <FormDialog

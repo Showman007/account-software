@@ -42,6 +42,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useAuth } from '../context/AuthContext.tsx';
+import { useIsMobile } from '../hooks/useIsMobile.ts';
 import type { JournalEntry, JournalLine, JournalSummary, QueryParams } from '../types/models.ts';
 
 const entryTypeLabels: Record<string, string> = {
@@ -84,7 +85,7 @@ const accountTypeColors: Record<string, string> = {
 
 function JournalLinesDetail({ lines }: { lines: JournalLine[] }) {
   return (
-    <Table size="small" sx={{ ml: 4, mr: 4, width: 'auto', minWidth: 500 }}>
+    <Table size="small" sx={{ ml: 4, mr: 4, width: 'auto' }}>
       <TableHead>
         <TableRow sx={{ backgroundColor: '#fafafa' }}>
           <TableCell sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>Account</TableCell>
@@ -163,7 +164,7 @@ function JournalRow({ entry, isExpanded, onToggle }: { entry: JournalEntry; isEx
         <TableCell align="right" sx={{ fontWeight: 500, whiteSpace: 'nowrap' }}>
           {formatINR(entry.total_amount)}
         </TableCell>
-        <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary' }}>
+        <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary', display: { xs: 'none', sm: 'table-cell' } }}>
           {entry.source_type ? entry.source_type.replace(/([A-Z])/g, ' $1').trim() : '-'}
         </TableCell>
       </TableRow>
@@ -214,7 +215,7 @@ function JournalTableHead() {
         <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
         <TableCell sx={{ fontWeight: 'bold' }}>Narration</TableCell>
         <TableCell align="right" sx={{ fontWeight: 'bold' }}>Amount</TableCell>
-        <TableCell sx={{ fontWeight: 'bold' }}>Source</TableCell>
+        <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Source</TableCell>
       </TableRow>
     </TableHead>
   );
@@ -250,7 +251,7 @@ function FilterBar({
             ),
           },
         }}
-        sx={{ width: 300 }}
+        sx={{ width: { xs: '100%', sm: 300 } }}
       />
       <FormControl size="small" sx={{ minWidth: 160 }}>
         <InputLabel>Entry Type</InputLabel>
@@ -420,9 +421,9 @@ function AllDataView() {
                 <TableCell sx={{ fontWeight: 'bold' }}>Journal #</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Narration</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Narration</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Account</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Account Type</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Account Type</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Debit</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Credit</TableCell>
               </TableRow>
@@ -456,13 +457,13 @@ function AllDataView() {
                             size="small"
                           />
                         </TableCell>
-                        <TableCell rowSpan={entry.journal_lines.length} sx={{ verticalAlign: 'top', borderRight: '1px solid #e0e0e0', maxWidth: 300 }}>
+                        <TableCell rowSpan={entry.journal_lines.length} sx={{ verticalAlign: 'top', borderRight: '1px solid #e0e0e0', maxWidth: 300, display: { xs: 'none', sm: 'table-cell' } }}>
                           {entry.narration}
                         </TableCell>
                       </>
                     ) : null}
                     <TableCell sx={{ fontSize: '0.85rem' }}>{line.account_name}</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <Chip
                         label={line.account_type}
                         size="small"
@@ -507,6 +508,7 @@ function AllDataView() {
 
 export default function JournalPage() {
   const { isAdmin } = useAuth();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(0);
 

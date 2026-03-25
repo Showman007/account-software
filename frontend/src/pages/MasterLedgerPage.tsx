@@ -19,6 +19,7 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import { fetchMasterLedger } from '../api/resources.ts';
+import { useIsMobile } from '../hooks/useIsMobile.ts';
 import type { LedgerEntry } from '../types/models.ts';
 
 interface BuyerEntry extends LedgerEntry {
@@ -32,6 +33,7 @@ interface SupplierEntry extends LedgerEntry {
 }
 
 export default function MasterLedgerPage() {
+  const isMobile = useIsMobile();
   const { data, isLoading, error } = useQuery({
     queryKey: ['master_ledger'],
     queryFn: fetchMasterLedger,
@@ -87,9 +89,9 @@ export default function MasterLedgerPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>#</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Party Name</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Village/City</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Village/City</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Billed</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Received</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Balance</TableCell>
@@ -106,9 +108,9 @@ export default function MasterLedgerPage() {
                 <>
                   {buyers.map((b, i) => (
                     <TableRow key={b.party_id ?? i} hover>
-                      <TableCell>{i + 1}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{i + 1}</TableCell>
                       <TableCell sx={{ fontWeight: 500 }}>{b.party_name}</TableCell>
-                      <TableCell>{b.village_city || '-'}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{b.village_city || '-'}</TableCell>
                       <TableCell align="right">{formatINR(b.total_billed || 0)}</TableCell>
                       <TableCell align="right" sx={{ color: '#2E7D32' }}>{formatINR(b.total_received || 0)}</TableCell>
                       <TableCell align="right">
@@ -147,9 +149,9 @@ export default function MasterLedgerPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>#</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Party Name</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Village/City</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Village/City</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Purchased</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Paid</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Balance</TableCell>
@@ -166,9 +168,9 @@ export default function MasterLedgerPage() {
                 <>
                   {suppliers.map((s, i) => (
                     <TableRow key={s.party_id ?? i} hover>
-                      <TableCell>{i + 1}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{i + 1}</TableCell>
                       <TableCell sx={{ fontWeight: 500 }}>{s.party_name}</TableCell>
-                      <TableCell>{s.village_city || '-'}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{s.village_city || '-'}</TableCell>
                       <TableCell align="right">{formatINR(s.total_purchased || 0)}</TableCell>
                       <TableCell align="right" sx={{ color: '#2E7D32' }}>{formatINR(s.total_paid || 0)}</TableCell>
                       <TableCell align="right">

@@ -70,6 +70,7 @@ export default function UsersPage() {
           if (window.confirm(`Delete user "${row.email}"?`)) crud.deleteMutation.mutate(row.id);
         }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        mobileHiddenColumns={['id']}
       />
       {dialogOpen && (
         <FormDialog
