@@ -6,10 +6,13 @@ A full-stack accounting and inventory management system built for rice mill oper
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Rails 8, Ruby, PostgreSQL |
-| Frontend | React 19, TypeScript, Vite, Material-UI v7 |
+| Backend | Rails 8, Ruby 3.3, PostgreSQL 16 |
+| Frontend | React 19, TypeScript, Vite 8, Material-UI v7 |
 | Auth | Devise + JWT |
 | Authorization | Pundit |
+| Data Fetching | TanStack React Query |
+| Forms | React Hook Form + Zod |
+| Charts | Recharts |
 | Containerization | Docker Compose |
 
 ## Features
@@ -19,125 +22,306 @@ A full-stack accounting and inventory management system built for rice mill oper
 - **Payments** — Record payments to suppliers and receipts from buyers
 - **Payment Reversal** — Reverse payments instead of editing/deleting (audit-safe)
 - **Auto Payments** — Automatically creates payment records when inbound/outbound entries include paid/received amounts
+- **Bill Adjustments (FIFO Allocation)** — Automatically allocates payments to bills oldest-first, tracks per-bill payment breakdown, and deallocates on reversal
 - **Expenses** — Track operational expenses by category
 - **Milling Batches** — Record milling operations with costs
 - **Credit Transactions** — Manage partner capital, principal returns, and profit sharing
 - **Stock Management** — Track current stock levels
 - **Journal Entries** — Auto-generated double-entry bookkeeping journal from all transactions
 - **Reversal Audit Trail** — Edits and deletes create reversal journal entries (never overwrites)
-- **Party Ledger** — Per-party transaction history with running balance
+- **Party Ledger** — Per-party transaction history with running balance and bill adjustments view
 - **Master Ledger** — Overview of all buyer/supplier balances
 - **Profit Calculator** — Calculate profit margins
 - **Import/Export** — Excel-based data import and export
 - **Dashboard** — Overview with key metrics
 
-## Prerequisites
+---
 
-- [Docker](https://www.docker.com/get-started) and Docker Compose
-- Git
+## Local Setup
 
-## Quick Start
+You can run this project either with **Docker** (recommended, works on any OS) or **natively** on your machine.
 
-### 1. Clone the repository
+---
+
+### Option A: Docker Setup (Mac / Windows / Linux)
+
+This is the simplest approach — no need to install Ruby, Node, or PostgreSQL separately.
+
+#### Prerequisites
+
+| Tool | Install Link |
+|------|-------------|
+| Docker Desktop | [docker.com/get-started](https://www.docker.com/get-started) |
+| Git | [git-scm.com](https://git-scm.com/) |
+
+> **Windows users:** Make sure WSL 2 is enabled in Docker Desktop settings.
+
+#### Steps
 
 ```bash
+# 1. Clone the repository
 git clone git@github.com:Showman007/account-software.git
 cd account-software
-```
 
-### 2. Set up environment variables
-
-```bash
+# 2. Set up environment variables
 cp .env.example .env
-```
+# Edit .env if needed (defaults work for development)
 
-Edit `.env` and set your values:
-
-```
-DB_PASSWORD=ricemill_dev_2024
-JWT_SECRET=your_secret_key_here
-RAILS_MASTER_KEY=your_master_key_here
-```
-
-### 3. Start the application
-
-```bash
+# 3. Build and start all services
 docker compose up --build
+
+# 4. In a new terminal, set up the database
+docker compose exec backend rails db:create db:migrate db:seed
+
+# 5. Backfill payment allocations (if you have existing data)
+docker compose exec backend rails allocations:backfill
 ```
 
-This starts three services:
-- **PostgreSQL** on port `5432`
-- **Rails API** on port `3000`
-- **React Frontend** on port `5173`
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 4. Set up the database
+---
+
+### Option B: Native Setup — macOS
+
+#### Prerequisites
+
+Install these tools using [Homebrew](https://brew.sh/):
 
 ```bash
-docker compose exec backend rails db:create db:migrate db:seed
+# Install Homebrew (if not already installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Ruby version manager, Node.js, and PostgreSQL
+brew install rbenv ruby-build node postgresql@16
+
+# Start PostgreSQL service
+brew services start postgresql@16
 ```
 
-### 5. Open the app
+#### Ruby Setup
 
-Go to [http://localhost:5173](http://localhost:5173)
+```bash
+# Install Ruby 3.3.0
+rbenv install 3.3.0
+rbenv global 3.3.0
 
-**Default admin credentials:**
+# Verify
+ruby -v
+# => ruby 3.3.0
+```
+
+Add to your `~/.zshrc` (or `~/.bash_profile`):
+```bash
+eval "$(rbenv init -)"
+```
+
+Then reload your shell:
+```bash
+source ~/.zshrc
+```
+
+#### PostgreSQL Setup
+
+```bash
+# Create the database user
+psql postgres -c "CREATE USER ricemill WITH PASSWORD 'ricemill_dev_2024' CREATEDB;"
+```
+
+#### Backend Setup
+
+```bash
+cd account-software/backend
+
+# Install gems
+bundle install
+
+# Create and set up the database
+rails db:create db:migrate db:seed
+
+# Backfill payment allocations
+rails allocations:backfill
+
+# Start the Rails server
+rails server
+# => Running on http://localhost:3000
+```
+
+#### Frontend Setup
+
+```bash
+cd account-software/frontend
+
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+# => Running on http://localhost:5173
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+### Option C: Native Setup — Windows
+
+#### Prerequisites
+
+| Tool | Download |
+|------|----------|
+| Ruby 3.3 | [rubyinstaller.org](https://rubyinstaller.org/downloads/) — choose "Ruby+Devkit 3.3.x (x64)" |
+| Node.js 20+ | [nodejs.org](https://nodejs.org/) — choose the LTS version |
+| PostgreSQL 16 | [postgresql.org/download/windows](https://www.postgresql.org/download/windows/) |
+| Git | [git-scm.com](https://git-scm.com/download/win) |
+
+> **Important:** During Ruby installation, check "Add Ruby to PATH" and run the MSYS2 toolchain setup when prompted. During PostgreSQL installation, remember the password you set for the `postgres` user.
+
+#### PostgreSQL Setup
+
+Open **pgAdmin** or a **Command Prompt** and run:
+
+```sql
+-- Using psql (add PostgreSQL bin to your PATH first)
+psql -U postgres -c "CREATE USER ricemill WITH PASSWORD 'ricemill_dev_2024' CREATEDB;"
+```
+
+Or via **pgAdmin**:
+1. Right-click "Login/Group Roles" → Create → Login/Group Role
+2. Name: `ricemill`, Password: `ricemill_dev_2024`
+3. Under "Privileges", enable "Can login?" and "Create databases?"
+
+#### Backend Setup
+
+Open **Command Prompt** or **PowerShell**:
+
+```cmd
+cd account-software\backend
+
+# Install gems
+bundle install
+
+# Create and set up the database
+rails db:create db:migrate db:seed
+
+# Backfill payment allocations
+rails allocations:backfill
+
+# Start the Rails server
+rails server
+```
+
+> **Troubleshooting:** If `bundle install` fails on native extensions, ensure MSYS2 was installed with Ruby. Run `ridk install` and choose option 3 (MSYS2 and MINGW development toolchain).
+
+#### Frontend Setup
+
+Open another **Command Prompt** or **PowerShell**:
+
+```cmd
+cd account-software\frontend
+
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DB_PASSWORD` | `ricemill_dev_2024` | PostgreSQL password |
+| `DB_HOST` | `localhost` | Database host (native) or `db` (Docker) |
+| `DB_USERNAME` | `ricemill` | Database username |
+| `JWT_SECRET` | `super_secret_jwt_key...` | JWT signing secret (change in production) |
+| `RAILS_MASTER_KEY` | — | Rails encrypted credentials key |
+| `VITE_API_URL` | `http://localhost:3000/api/v1` | API URL for frontend |
+
+The frontend `.env` file is at `frontend/.env`:
+```
+VITE_API_URL=http://localhost:3000/api/v1
+```
+
+---
+
+## Default Login Credentials
+
 | Field | Value |
 |-------|-------|
 | Email | `admin@ricemill.com` |
 | Password | `password123` |
 
+---
+
 ## Useful Commands
 
-### Rails console
+### Docker Commands
 
 ```bash
-docker compose exec backend rails console
-```
+# Start all services
+docker compose up --build
 
-### Run migrations
+# Stop all services
+docker compose down
 
-```bash
-docker compose exec backend rails db:migrate
-```
-
-### Backfill journal entries (for existing data)
-
-```bash
-docker compose exec backend rails journals:backfill
-```
-
-### Backfill auto-payments (from inbound/outbound entries)
-
-```bash
-docker compose exec backend rails payments:backfill
-```
-
-### Clear all journal entries
-
-```bash
-docker compose exec backend rails journals:clear
-```
-
-### View logs
-
-```bash
+# View logs
 docker compose logs -f backend
 docker compose logs -f frontend
-```
 
-### Stop the application
+# Rails console
+docker compose exec backend rails console
 
-```bash
-docker compose down
-```
+# Run migrations
+docker compose exec backend rails db:migrate
 
-### Reset everything (including database)
-
-```bash
+# Reset everything (wipes database)
 docker compose down -v
 docker compose up --build
 docker compose exec backend rails db:create db:migrate db:seed
 ```
+
+### Native Commands (run from `backend/` directory)
+
+```bash
+# Rails console
+rails console
+
+# Run migrations
+rails db:migrate
+
+# Reset database
+rails db:drop db:create db:migrate db:seed
+```
+
+### Rake Tasks
+
+```bash
+# Backfill journal entries (for existing data)
+rails journals:backfill
+
+# Clear all journal entries
+rails journals:clear
+
+# Backfill auto-payments (from inbound/outbound paid/received fields)
+rails payments:backfill
+
+# Backfill payment allocations (FIFO allocation for all parties)
+rails allocations:backfill
+
+# Re-allocate payments for a specific party
+rails allocations:reallocate_party[42]
+
+# Clear all allocations and reset bill balances
+rails allocations:reset
+```
+
+> **Docker:** Prefix all rails/rake commands with `docker compose exec backend`
+
+---
 
 ## API Endpoints
 
@@ -148,6 +332,7 @@ All API routes are under `/api/v1/`:
 | `auth/sign_in` | POST | Login |
 | `auth/sign_out` | DELETE | Logout |
 | `auth/me` | GET | Current user |
+| `auth/register` | POST | Register new user |
 | `parties` | CRUD | Suppliers and buyers |
 | `inbound_entries` | CRUD | Purchase entries |
 | `outbound_entries` | CRUD | Sale entries |
@@ -160,14 +345,21 @@ All API routes are under `/api/v1/`:
 | `stock_items` | CRUD + recalculate | Stock levels |
 | `journal_entries` | GET | Journal entries (read-only) |
 | `journal_entries/backfill` | POST | Backfill journals (admin) |
+| `query_runner` | POST | Execute SQL queries (admin) |
+| `query_runner/tables` | GET | List database tables (admin) |
 | `dashboard` | GET | Dashboard metrics |
 | `master_ledger` | GET | All party balances |
-| `party_ledger/:id` | GET | Single party ledger |
+| `party_ledger/:id` | GET | Single party ledger with bill adjustments |
 | `profit_calculator` | GET | Profit calculations |
+| `imports` | POST | Import data from Excel |
+| `exports/:id` | GET | Export data |
 | `products` | CRUD | Product master data |
 | `units` | CRUD | Unit master data |
 | `expense_categories` | CRUD | Expense categories |
 | `payment_modes` | CRUD | Payment modes |
+| `users` | CRUD | User management (admin) |
+
+---
 
 ## Project Structure
 
@@ -175,27 +367,30 @@ All API routes are under `/api/v1/`:
 account-software/
 ├── docker-compose.yml
 ├── .env.example
-├── backend/                  # Rails 8 API
+├── backend/                     # Rails 8 API
 │   ├── app/
-│   │   ├── controllers/api/v1/
+│   │   ├── controllers/api/v1/  # API controllers
 │   │   ├── models/
-│   │   │   └── concerns/     # Journalable, AutoPayment
-│   │   ├── services/         # JournalService, LedgerServices
-│   │   ├── serializers/      # Blueprinter serializers
-│   │   └── policies/         # Pundit authorization
+│   │   │   └── concerns/        # Journalable, AutoPayment
+│   │   ├── services/            # PaymentAllocationService, JournalService, LedgerServices
+│   │   ├── serializers/         # Blueprinter serializers
+│   │   └── policies/            # Pundit authorization
 │   ├── db/
 │   │   ├── migrate/
 │   │   └── seeds.rb
-│   └── lib/tasks/            # Rake tasks
-└── frontend/                 # React 19 + Vite
+│   └── lib/tasks/               # Rake tasks (journals, payments, allocations)
+└── frontend/                    # React 19 + Vite
     └── src/
-        ├── api/              # API client and resource functions
-        ├── components/       # Reusable UI components
-        ├── context/          # Auth context
-        ├── hooks/            # Custom hooks (useCrud, useReferenceData)
-        ├── pages/            # All page components
-        └── types/            # TypeScript interfaces
+        ├── api/                 # API client and resource functions
+        ├── components/          # Reusable UI components (DataTable, FormDialog)
+        ├── context/             # Auth context
+        ├── hooks/               # Custom hooks (useCrud, useReferenceData)
+        ├── pages/               # All page components
+        ├── theme/               # MUI theme configuration
+        └── types/               # TypeScript interfaces
 ```
+
+---
 
 ## Seeded Master Data
 
@@ -203,11 +398,13 @@ The database seed includes ready-to-use master data for rice mill operations:
 
 **Products:** Sona Masoori, BPT 5204, IR 64, Swarna, MTU 1010, Broken Rice, Rice Bran, Husk, and more
 
-**Units:** Quintals, Kgs, Bags, Tonnes, Litres
+**Units:** Quintals, Kgs, Bags, Nos, Tonnes, Litres
 
 **Expense Categories:** Salary, Milling Cost, Transport, Electricity, Repair & Maintenance, Labour, Packaging, Fuel
 
 **Payment Modes:** Cash, Online Transfer, Cheque, UPI, Credit, Pending
+
+---
 
 ## Accounting Concepts
 
@@ -219,3 +416,16 @@ When records are edited or deleted, the system creates **reversal entries** (swa
 
 ### Payment Reversals
 Payments cannot be edited or deleted. Instead, admin users can **reverse** a payment, which creates a new entry with the opposite direction. Both the original and reversal are preserved for audit purposes.
+
+### Bill Adjustments (FIFO Payment Allocation)
+When a payment is recorded, it is automatically allocated to the party's outstanding bills in FIFO order (oldest bill first):
+
+- **Buyer makes a payment** → allocated against their oldest unpaid outbound (sale) bills
+- **Supplier is paid** → allocated against the oldest unpaid inbound (purchase) bills
+- **Payment reversal** → all allocations for that payment are removed and bill balances are restored
+
+Each bill tracks its total amount, how much has been allocated from payments, and the remaining balance. The "Bill Adjustments" tab in the Party Ledger shows a per-bill breakdown with payment details and progress indicators.
+
+**Example:** A buyer has two bills — Bill A (Rs 50,000) and Bill B (Rs 30,000). If they pay Rs 60,000:
+1. Bill A is fully cleared (Rs 50,000 allocated, balance Rs 0)
+2. Bill B is partially paid (Rs 10,000 allocated, balance Rs 20,000)
