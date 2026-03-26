@@ -141,12 +141,21 @@ const PaymentsPageComp = () => {
       headerName: 'Direction',
       width: 170,
       renderCell: (p) => {
-        const label = directionOptions.find((d) => d.value === p.value)?.label ?? p.value;
+        const row = p.row as Payment;
+        let label = directionOptions.find((d) => d.value === p.value)?.label ?? p.value;
+        let color: 'error' | 'success' | 'warning' = p.value === 'payment_to_supplier' ? 'error' : 'success';
+
+        // Reversal payments should show "Refund to Supplier" / "Refund from Buyer"
+        if (row.reversed_payment_id) {
+          label = p.value === 'payment_to_supplier' ? 'Refund to Supplier' : 'Refund from Buyer';
+          color = 'warning';
+        }
+
         return (
           <Chip
             label={label}
             size="small"
-            color={p.value === 'payment_to_supplier' ? 'error' : 'success'}
+            color={color}
             variant="filled"
             sx={{ fontSize: '0.75rem' }}
           />

@@ -83,7 +83,13 @@ class PartyLedgerService
         type: 'payment',
         id: p.id,
         date: p.date,
-        description: p.payment_to_supplier? ? 'Payment to supplier' : 'Receipt from buyer',
+        description: if p.is_reversal?
+                       p.payment_to_supplier? ? 'Refund to supplier' : 'Refund from buyer'
+                     elsif p.payment_to_supplier?
+                       'Payment to supplier'
+                     else
+                       'Receipt from buyer'
+                     end,
         amount: p.amount,
         payment_mode: p.payment_mode&.name,
         reference: p.reference,

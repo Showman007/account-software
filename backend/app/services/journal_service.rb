@@ -147,10 +147,14 @@ class JournalService
     when OutboundEntry
       "Sale of #{@record.product&.name} to #{@record.party&.name} - #{@record.qty} qty @ #{@record.rate}"
     when Payment
-      if @record.payment_to_supplier?
-        "Payment to #{@record.party&.name} via #{@record.payment_mode&.name || 'Cash'}"
+      mode = @record.payment_mode&.name || 'Cash'
+      party = @record.party&.name
+      if @record.is_reversal?
+        @record.payment_to_supplier? ? "Refund to #{party} via #{mode}" : "Refund from #{party} via #{mode}"
+      elsif @record.payment_to_supplier?
+        "Payment to #{party} via #{mode}"
       else
-        "Receipt from #{@record.party&.name} via #{@record.payment_mode&.name || 'Cash'}"
+        "Receipt from #{party} via #{mode}"
       end
     when Expense
       "Expense: #{@record.description} - #{@record.category&.name}"
@@ -176,7 +180,11 @@ class JournalService
     when InboundEntry then :purchase
     when OutboundEntry then :sale
     when Payment
-      @record.payment_to_supplier? ? :payment_out : :payment_in
+      if @record.is_reversal?
+        :reversal
+      else
+        @record.payment_to_supplier? ? :payment_out : :payment_in
+      end
     when Expense then :expense
     when CreditTransaction
       case @record.transaction_type
