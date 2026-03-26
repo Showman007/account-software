@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { TextField } from '@mui/material';
+import { useFormContext } from 'react-hook-form';
 import type { GridColDef } from '@mui/x-data-grid';
 import DataTable from '../components/common/DataTable.tsx';
 import FormDialog from '../components/common/FormDialog.tsx';
@@ -8,7 +9,31 @@ import { useCrud } from '../hooks/useCrud.ts';
 import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { outboundEntriesApi } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
-import type { OutboundEntry } from '../types/models.ts';
+import type { OutboundEntry, Product } from '../types/models.ts';
+
+const CATEGORY_OPTIONS = [
+  { value: 'paddy', label: 'Paddy' },
+  { value: 'rice', label: 'Rice' },
+  { value: 'by_product', label: 'By-Product' },
+  { value: 'packaging', label: 'Packaging' },
+  { value: 'other', label: 'Other' },
+];
+
+function ProductCategorySync({ productMap }: { productMap: Map<number, Product> }) {
+  const { watch, setValue } = useFormContext();
+  const productId = watch('product_id');
+
+  useEffect(() => {
+    if (productId) {
+      const product = productMap.get(Number(productId));
+      if (product?.category) {
+        setValue('category', product.category);
+      }
+    }
+  }, [productId, productMap, setValue]);
+
+  return null;
+}
 
 export default function OutboundPage() {
   const crud = useCrud<OutboundEntry>('outbound_entries', outboundEntriesApi);
@@ -34,6 +59,7 @@ export default function OutboundPage() {
     { field: 'party_id', headerName: 'Party', flex: 1, renderCell: (p) => partyMap.get(p.value as number)?.name ?? p.value },
     { field: 'city', headerName: 'City', width: 120 },
     { field: 'product_id', headerName: 'Product', width: 120, renderCell: (p) => productMap.get(p.value as number)?.name ?? p.value },
+    { field: 'category', headerName: 'Category', width: 100 },
     { field: 'qty', headerName: 'Qty', width: 80 },
     { field: 'unit_id', headerName: 'Unit', width: 80, renderCell: (p) => unitMap.get(p.value as number)?.abbreviation ?? p.value },
     { field: 'rate', headerName: 'Rate', width: 100, renderCell: (p) => formatINR(p.value as number) },
@@ -51,7 +77,7 @@ export default function OutboundPage() {
         party_id: editing.party_id,
         city: editing.city,
         product_id: editing.product_id,
-        category: editing.category,
+        category: editing.category || '',
         qty: editing.qty,
         unit_id: editing.unit_id,
         rate: editing.rate,
@@ -59,7 +85,7 @@ export default function OutboundPage() {
         received: editing.received,
       };
     }
-    return { date: new Date().toISOString().slice(0, 10), qty: 0, rate: 0, transport: 0, received: 0 };
+    return { date: new Date().toISOString().slice(0, 10), qty: 0, rate: 0, transport: 0, received: 0, category: '' };
   }, [editing]);
 
   const handleSubmit = (data: Record<string, unknown>) => {
@@ -84,7 +110,7 @@ export default function OutboundPage() {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
-        mobileHiddenColumns={['id', 'city', 'qty', 'unit_id', 'rate', 'amount', 'transport', 'received']}
+        mobileHiddenColumns={['id', 'city', 'category', 'qty', 'unit_id', 'rate', 'amount', 'transport', 'received']}
       />
       {dialogOpen && (
         <FormDialog
@@ -95,11 +121,12 @@ export default function OutboundPage() {
           defaultValues={defaults}
           isLoading={crud.createMutation.isPending || crud.updateMutation.isPending}
         >
+          <ProductCategorySync productMap={productMap} />
           <FormDateField name="date" label="Date" required />
           <FormAutocomplete name="party_id" label="Party" options={partyOptions} required />
           <FormField name="city" label="City" />
           <FormSelectField name="product_id" label="Product" options={outboundProducts} required />
-          <FormField name="category" label="Category" />
+          <FormSelectField name="category" label="Category" options={CATEGORY_OPTIONS} />
           <FormField name="qty" label="Quantity" type="number" required />
           <FormSelectField name="unit_id" label="Unit" options={unitOptions} required />
           <FormField name="rate" label="Rate" type="number" required />
