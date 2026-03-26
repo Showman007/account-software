@@ -1,4 +1,4 @@
 export const APP_CONFIG = {
-  name: 'Rice Mill Katha',
-  fullName: 'Rice Mill Katha Book',
+  name: 'SMLTC',
+  fullName: 'Account Book',
 } as const;
