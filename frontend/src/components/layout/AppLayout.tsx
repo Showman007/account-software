@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { APP_CONFIG } from '../../config/appConfig.ts';
 import {
   AppBar,
   Box,
@@ -141,7 +142,7 @@ export default function AppLayout() {
     <Box sx={{ overflow: 'auto' }}>
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="h6" fontWeight="bold" color="white">
-          Rice Mill Katha
+          {APP_CONFIG.name}
         </Typography>
       </Box>
       <Divider sx={{ borderColor: colors.drawerDivider }} />
@@ -214,7 +215,7 @@ export default function AppLayout() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            Rice Mill Katha Book
+            {APP_CONFIG.fullName}
           </Typography>
           <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
             {user?.email}

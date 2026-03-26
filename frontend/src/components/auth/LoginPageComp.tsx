@@ -2,6 +2,7 @@ import { Alert, Box, Button, Card, CardContent, Link, TextField, Typography } fr
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext.tsx';
+import { APP_CONFIG } from '../../config/appConfig.ts';
 import { useState } from 'react';
 
 const LoginPageComp = () => {
@@ -39,7 +40,7 @@ const LoginPageComp = () => {
       <Card sx={{ width: { xs: '100%', sm: 400 }, mx: { xs: 2, sm: 0 } }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h4" align="center" fontWeight="bold" color="primary" gutterBottom>
-            Rice Mill Katha
+            {APP_CONFIG.name}
           </Typography>
           <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
             Sign in to your account
