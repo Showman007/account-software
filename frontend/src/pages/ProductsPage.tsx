@@ -6,7 +6,7 @@ import { FormField, FormSelectField } from '../components/common/FormField.tsx';
 import { useCrud } from '../hooks/useCrud.ts';
 import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { productsApi } from '../api/resources.ts';
-import type { Product } from '../types/models.ts';
+import type { Product } from '../types/masters.ts';
 
 const directionOptions = [
   { value: 'inbound', label: 'Inbound' },

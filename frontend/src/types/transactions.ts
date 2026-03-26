@@ -1,0 +1,51 @@
+/** Transaction types — Inbound, Outbound, Payments */
+
+export interface InboundEntry {
+  id: number;
+  date: string;
+  party_id: number;
+  village: string;
+  product_id: number;
+  category: string;
+  qty: number;
+  unit_id: number;
+  rate: number;
+  gross_amt: number;
+  moisture_pct: number;
+  deduction_amt: number;
+  net_qty: number;
+  net_amt: number;
+  paid: number;
+  balance: number;
+}
+
+export interface OutboundEntry {
+  id: number;
+  date: string;
+  party_id: number;
+  city: string;
+  product_id: number;
+  category: string;
+  qty: number;
+  unit_id: number;
+  rate: number;
+  amount: number;
+  transport: number;
+  total_bill: number;
+  received: number;
+  balance: number;
+}
+
+export interface Payment {
+  id: number;
+  date: string;
+  party_id: number;
+  village_city: string;
+  direction: 'payment_to_supplier' | 'receipt_from_buyer';
+  amount: number;
+  payment_mode_id: number;
+  reference: string;
+  remarks: string;
+  reversed: boolean;
+  reversed_payment_id: number | null;
+}

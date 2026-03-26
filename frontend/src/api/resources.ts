@@ -1,37 +1,15 @@
 import apiClient from './client.ts';
-import type {
-  PaginatedResponse,
-  QueryParams,
-  Party,
-  InboundEntry,
-  OutboundEntry,
-  MillingBatch,
-  Expense,
-  Payment,
-  Partner,
-  CreditTransaction,
-  StockItem,
-  Product,
-  Unit,
-  ExpenseCategory,
-  PaymentMode,
-  User,
-  DashboardData,
-  MasterLedgerData,
-  PartyLedgerData,
-  ProfitCalculatorData,
-  JournalEntry,
-  JournalPaginatedResponse,
-  JournalSummary,
-} from '../types/models.ts';
+import type { PaginatedResponse, QueryParams } from '../types/common.ts';
+import type { User } from '../types/auth.ts';
+import type { Party, Product, Unit, ExpenseCategory, PaymentMode } from '../types/masters.ts';
+import type { InboundEntry, OutboundEntry, Payment } from '../types/transactions.ts';
+import type { MillingBatch, Expense, StockItem } from '../types/operations.ts';
+import type { Partner, CreditTransaction } from '../types/partners.ts';
+import type { JournalEntry, JournalPaginatedResponse, JournalSummary } from '../types/journal.ts';
+import type { DashboardData, MasterLedgerData, PartyLedgerData, ProfitCalculatorData } from '../types/reports.ts';
+import type { ResourceApi, QueryResult, TableInfo } from '../types/api.ts';
 
-export interface ResourceApi<T> {
-  getAll(params?: QueryParams): Promise<PaginatedResponse<T>>;
-  getOne(id: number): Promise<T>;
-  create(data: Partial<T>): Promise<T>;
-  update(id: number, data: Partial<T>): Promise<T>;
-  remove(id: number): Promise<void>;
-}
+export type { ResourceApi, QueryResult, TableInfo };
 
 function createResourceApi<T>(resourcePath: string): ResourceApi<T> {
   return {
@@ -136,18 +114,6 @@ export function getExportUrl(type: string, fromDate?: string, toDate?: string): 
 }
 
 // Query Runner
-export interface QueryResult {
-  columns: string[];
-  rows: (string | number | boolean | null)[][];
-  row_count: number;
-  duration_ms: number;
-}
-
-export interface TableInfo {
-  name: string;
-  columns: { name: string; type: string; nullable: boolean }[];
-}
-
 export async function executeQuery(sql: string): Promise<QueryResult> {
   const response = await apiClient.post('/query_runner', { sql });
   return response.data;

@@ -8,7 +8,7 @@ import { useCrud } from '../hooks/useCrud.ts';
 import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { creditTransactionsApi, partnersApi } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
-import type { CreditTransaction, Partner } from '../types/models.ts';
+import type { CreditTransaction, Partner } from '../types/partners.ts';
 
 const txnTypeOptions = [
   { value: 'credit_received', label: 'Credit Received' },

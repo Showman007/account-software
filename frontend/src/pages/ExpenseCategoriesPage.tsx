@@ -5,7 +5,7 @@ import FormDialog from '../components/common/FormDialog.tsx';
 import { FormField } from '../components/common/FormField.tsx';
 import { useCrud } from '../hooks/useCrud.ts';
 import { expenseCategoriesApi } from '../api/resources.ts';
-import type { ExpenseCategory } from '../types/models.ts';
+import type { ExpenseCategory } from '../types/masters.ts';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 60 },

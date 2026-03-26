@@ -33,7 +33,8 @@ import { paymentsApi, reversePayment } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useAppColors } from '../context/ThemeContext.tsx';
-import type { Payment, QueryParams } from '../types/models.ts';
+import type { Payment } from '../types/transactions.ts';
+import type { QueryParams } from '../types/common.ts';
 
 const directionOptions = [
   { value: 'payment_to_supplier', label: 'Payment to Supplier' },

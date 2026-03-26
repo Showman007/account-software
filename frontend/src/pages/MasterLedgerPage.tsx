@@ -21,7 +21,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import { fetchMasterLedger } from '../api/resources.ts';
 import { useIsMobile } from '../hooks/useIsMobile.ts';
 import { useAppColors } from '../context/ThemeContext.tsx';
-import type { LedgerEntry } from '../types/models.ts';
+import type { LedgerEntry } from '../types/reports.ts';
 
 interface BuyerEntry extends LedgerEntry {
   total_billed: number;

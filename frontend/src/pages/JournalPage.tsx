@@ -45,7 +45,8 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { useIsMobile } from '../hooks/useIsMobile.ts';
 import { useAppColors } from '../context/ThemeContext.tsx';
 import type { AppColors } from '../theme/colors.ts';
-import type { JournalEntry, JournalLine, JournalSummary, QueryParams } from '../types/models.ts';
+import type { JournalEntry, JournalLine, JournalSummary } from '../types/journal.ts';
+import type { QueryParams } from '../types/common.ts';
 
 const entryTypeLabels: Record<string, string> = {
   purchase: 'Purchase',

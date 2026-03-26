@@ -7,7 +7,7 @@ import { FormField, FormDateField } from '../components/common/FormField.tsx';
 import { useCrud } from '../hooks/useCrud.ts';
 import { millingBatchesApi } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
-import type { MillingBatch } from '../types/models.ts';
+import type { MillingBatch } from '../types/operations.ts';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 60 },

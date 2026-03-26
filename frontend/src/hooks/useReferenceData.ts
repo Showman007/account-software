@@ -6,7 +6,7 @@ import {
   paymentModesApi,
   partiesApi,
 } from '../api/resources.ts';
-import type { Product, Unit, ExpenseCategory, PaymentMode, Party } from '../types/models.ts';
+import type { Product, Unit, ExpenseCategory, PaymentMode, Party } from '../types/masters.ts';
 
 export function useReferenceData() {
   const { data: productsData } = useQuery({

@@ -6,7 +6,7 @@ import FormDialog from '../components/common/FormDialog.tsx';
 import { FormField, FormSelectField } from '../components/common/FormField.tsx';
 import { useCrud } from '../hooks/useCrud.ts';
 import { usersApi } from '../api/resources.ts';
-import type { User } from '../types/models.ts';
+import type { User } from '../types/auth.ts';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 60 },

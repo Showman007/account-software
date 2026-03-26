@@ -6,7 +6,7 @@ import FormDialog from '../components/common/FormDialog.tsx';
 import { FormField, FormDateField, FormSelectField } from '../components/common/FormField.tsx';
 import { useCrud } from '../hooks/useCrud.ts';
 import { partnersApi } from '../api/resources.ts';
-import type { Partner } from '../types/models.ts';
+import type { Partner } from '../types/partners.ts';
 
 const shareTypeOptions = [
   { value: 'percentage', label: 'Percentage' },

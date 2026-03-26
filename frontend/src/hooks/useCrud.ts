@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import type { ResourceApi } from '../api/resources.ts';
-import type { QueryParams, PaginationMeta } from '../types/models.ts';
+import type { QueryParams, PaginationMeta } from '../types/common.ts';
 
 export interface UseCrudReturn<T> {
   data: T[];

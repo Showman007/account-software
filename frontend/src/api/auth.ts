@@ -1,5 +1,5 @@
 import apiClient from './client.ts';
-import type { User } from '../types/models.ts';
+import type { User } from '../types/auth.ts';
 
 export async function login(email: string, password: string): Promise<User> {
   const response = await apiClient.post('/auth/sign_in', {

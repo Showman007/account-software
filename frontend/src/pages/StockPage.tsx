@@ -10,7 +10,7 @@ import { useCrud } from '../hooks/useCrud.ts';
 import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { stockItemsApi, recalculateStock } from '../api/resources.ts';
 import { useAuth } from '../context/AuthContext.tsx';
-import type { StockItem } from '../types/models.ts';
+import type { StockItem } from '../types/operations.ts';
 
 export default function StockPage() {
   const crud = useCrud<StockItem>('stock_items', stockItemsApi);

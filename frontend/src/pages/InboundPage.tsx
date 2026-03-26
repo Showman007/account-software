@@ -1,6 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { TextField } from '@mui/material';
-import { useFormContext } from 'react-hook-form';
 import type { GridColDef } from '@mui/x-data-grid';
 import DataTable from '../components/common/DataTable.tsx';
 import FormDialog from '../components/common/FormDialog.tsx';
@@ -9,32 +8,8 @@ import { useCrud } from '../hooks/useCrud.ts';
 import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { inboundEntriesApi } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
-import type { InboundEntry } from '../types/models.ts';
-import type { Product } from '../types/models.ts';
-
-const CATEGORY_OPTIONS = [
-  { value: 'paddy', label: 'Paddy' },
-  { value: 'rice', label: 'Rice' },
-  { value: 'by_product', label: 'By-Product' },
-  { value: 'packaging', label: 'Packaging' },
-  { value: 'other', label: 'Other' },
-];
-
-function ProductCategorySync({ productMap }: { productMap: Map<number, Product> }) {
-  const { watch, setValue } = useFormContext();
-  const productId = watch('product_id');
-
-  useEffect(() => {
-    if (productId) {
-      const product = productMap.get(Number(productId));
-      if (product?.category) {
-        setValue('category', product.category);
-      }
-    }
-  }, [productId, productMap, setValue]);
-
-  return null;
-}
+import { CATEGORY_OPTIONS, ProductCategorySync } from '../utils/categoryUtils.tsx';
+import type { InboundEntry } from '../types/transactions.ts';
 
 export default function InboundPage() {
   const crud = useCrud<InboundEntry>('inbound_entries', inboundEntriesApi);

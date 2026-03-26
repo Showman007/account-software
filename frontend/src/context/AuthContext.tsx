@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import type { User } from '../types/models.ts';
+import type { User } from '../types/auth.ts';
 import * as authApi from '../api/auth.ts';
 
 interface AuthContextType {

@@ -7,7 +7,7 @@ import { useCrud } from '../hooks/useCrud.ts';
 import { useReferenceData } from '../hooks/useReferenceData.ts';
 import { expensesApi } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
-import type { Expense } from '../types/models.ts';
+import type { Expense } from '../types/operations.ts';
 
 export default function ExpensesPage() {
   const crud = useCrud<Expense>('expenses', expensesApi);

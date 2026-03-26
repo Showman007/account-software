@@ -6,7 +6,7 @@ import { FormField, FormSelectField } from '../components/common/FormField.tsx';
 import { useCrud } from '../hooks/useCrud.ts';
 import { partiesApi } from '../api/resources.ts';
 import { formatINR } from '../components/common/SummaryCard.tsx';
-import type { Party } from '../types/models.ts';
+import type { Party } from '../types/masters.ts';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 70 },
