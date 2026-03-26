@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { Box, Card, CardContent, TextField, Button, Typography, Link, Alert } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Link, TextField, Typography } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useState } from 'react';
 
 const LoginPageComp = () => {
   const [email, setEmail] = useState('');
@@ -71,12 +72,12 @@ const LoginPageComp = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+          {/* <Typography variant="body2" align="center" sx={{ mt: 2 }}>
             Don't have an account?{' '}
             <Link component={RouterLink} to="/register">
               Register
             </Link>
-          </Typography>
+          </Typography> */}
         </CardContent>
       </Card>
     </Box>
