@@ -37,7 +37,6 @@ import { useIsMobile } from '../../hooks/useIsMobile.ts';
 import type { Payment } from '../../types/transactions.ts';
 import type { QueryParams } from '../../types/common.ts';
 import { directionOptions, getPaymentLabel, getPaymentColor } from '../../config/paymentLabels.ts';
-];
 
 const MOBILE_HIDDEN_COLUMNS = ['id', 'village_city', 'payment_mode_id', 'reference', 'remarks'];
 

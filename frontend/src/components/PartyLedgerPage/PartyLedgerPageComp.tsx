@@ -87,11 +87,26 @@ function transformTransactions(
       debit = Number(t.amount || 0);
       balance += debit;
     } else if (type === 'payment') {
-      const desc = t.description as string;
-      if (desc?.includes('Supplier')) {
+      const direction = t.direction as string;
+      const isReversal = t.is_reversal as boolean;
+
+      if (isReversal) {
+        // Reversal undoes the original payment — opposite effect
+        if (direction === 'payment_to_supplier') {
+          // Refund to supplier: we get money back → credit (increases balance)
+          credit = Number(t.amount || 0);
+          balance += credit;
+        } else {
+          // Refund to customer: we give money back → debit (increases balance)
+          debit = Number(t.amount || 0);
+          balance += debit;
+        }
+      } else if (direction === 'payment_to_supplier') {
+        // Payment to supplier: reduces what we owe
         debit = Number(t.amount || 0);
         balance -= debit;
       } else {
+        // Receipt from customer: reduces what they owe
         credit = Number(t.amount || 0);
         balance -= credit;
       }
