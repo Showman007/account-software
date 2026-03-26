@@ -10,6 +10,7 @@ import { useCrud } from '../../hooks/useCrud.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { stockItemsApi, recalculateStock } from '../../api/resources.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
+import ExportButton from '../common/ExportButton.tsx';
 import type { StockItem } from '../../types/operations.ts';
 
 const StockPageComp = () => {
@@ -63,7 +64,7 @@ const StockPageComp = () => {
         onEdit={isAdmin ? (row) => { setEditing(row); setDialogOpen(true); } : undefined}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
         mobileHiddenColumns={['id', 'unit_id', 'opening_stock', 'total_inbound', 'from_milling', 'total_outbound', 'min_level']}
-        actions={isAdmin ? <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRecalculate} disabled={recalculating}>{recalculating ? 'Recalculating...' : 'Recalculate'}</Button> : undefined}
+        actions={<><ExportButton exportType="stock_items" params={crud.params} />{isAdmin && <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRecalculate} disabled={recalculating}>{recalculating ? 'Recalculating...' : 'Recalculate'}</Button>}</>}
       />
       {dialogOpen && editing && (
         <FormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={handleSubmit}

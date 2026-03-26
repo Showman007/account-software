@@ -8,6 +8,7 @@ import { useCrud } from '../../hooks/useCrud.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { creditTransactionsApi, partnersApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import ExportButton from '../common/ExportButton.tsx';
 import type { CreditTransaction, Partner } from '../../types/partners.ts';
 
 const txnTypeOptions = [
@@ -67,6 +68,7 @@ const CreditTransactionsPageComp = () => {
         onDelete={(row) => { if (window.confirm('Delete this transaction?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
         mobileHiddenColumns={['id', 'credit_received', 'principal_returned', 'profit_paid', 'payment_mode_id', 'used_for']}
+        actions={<ExportButton exportType="credit_transactions" params={crud.params} />}
       />
       {dialogOpen && (
         <FormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={handleSubmit}

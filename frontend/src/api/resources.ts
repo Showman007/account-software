@@ -104,11 +104,14 @@ export async function importExcel(file: File): Promise<{ message: string; data: 
   return response.data;
 }
 
-export function getExportUrl(type: string, fromDate?: string, toDate?: string): string {
+export function getExportUrl(type: string, filterParams?: Record<string, string>): string {
   const base = apiClient.defaults.baseURL || '';
   const params = new URLSearchParams();
-  if (fromDate) params.set('from_date', fromDate);
-  if (toDate) params.set('to_date', toDate);
+  if (filterParams) {
+    for (const [key, value] of Object.entries(filterParams)) {
+      if (value) params.set(key, value);
+    }
+  }
   const qs = params.toString();
   return `${base}/exports/${type}${qs ? `?${qs}` : ''}`;
 }

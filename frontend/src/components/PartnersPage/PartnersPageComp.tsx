@@ -6,6 +6,7 @@ import FormDialog from '../common/FormDialog.tsx';
 import { FormField, FormDateField, FormSelectField } from '../common/FormField.tsx';
 import { useCrud } from '../../hooks/useCrud.ts';
 import { partnersApi } from '../../api/resources.ts';
+import ExportButton from '../common/ExportButton.tsx';
 import type { Partner } from '../../types/partners.ts';
 
 const shareTypeOptions = [{ value: 'percentage', label: 'Percentage' }, { value: 'fixed', label: 'Fixed' }];
@@ -47,6 +48,7 @@ const PartnersPageComp = () => {
         onDelete={(row) => { if (window.confirm(`Delete partner "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
         mobileHiddenColumns={['id', 'date_joined', 'profit_share_rate']}
+        actions={<ExportButton exportType="partners" params={crud.params} />}
       />
       {dialogOpen && (
         <FormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={handleSubmit}

@@ -8,6 +8,7 @@ import { useCrud } from '../../hooks/useCrud.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { outboundEntriesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import ExportButton from '../common/ExportButton.tsx';
 import { CATEGORY_OPTIONS, ProductCategorySync } from '../../utils/categoryUtils.tsx';
 import type { OutboundEntry } from '../../types/transactions.ts';
 
@@ -79,6 +80,7 @@ const OutboundPageComp = () => {
       onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
       mobileHiddenColumns={['id', 'city', 'category', 'qty', 'unit_id', 'rate', 'amount', 'transport', 'received']}
+      actions={<ExportButton exportType="outbound_entries" params={crud.params} />}
     />
   );
 

@@ -34,6 +34,7 @@ import { formatINR } from '../common/SummaryCard.tsx';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useAppColors } from '../../context/ThemeContext.tsx';
 import { useIsMobile } from '../../hooks/useIsMobile.ts';
+import ExportButton from '../common/ExportButton.tsx';
 import type { Payment } from '../../types/transactions.ts';
 import type { QueryParams } from '../../types/common.ts';
 import { directionOptions, getPaymentLabel, getPaymentColor } from '../../config/paymentLabels.ts';
@@ -211,11 +212,14 @@ const PaymentsPageComp = () => {
         <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
           Payments
         </Typography>
-        {isAdmin && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-            Add New
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <ExportButton exportType="payments" params={params} />
+          {isAdmin && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+              Add New
+            </Button>
+          )}
+        </Box>
       </Box>
 
       <Box sx={{ mb: 2 }}>

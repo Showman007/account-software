@@ -7,6 +7,7 @@ import { FormField, FormDateField } from '../common/FormField.tsx';
 import { useCrud } from '../../hooks/useCrud.ts';
 import { millingBatchesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import ExportButton from '../common/ExportButton.tsx';
 import type { MillingBatch } from '../../types/operations.ts';
 
 const columns: GridColDef[] = [
@@ -56,6 +57,7 @@ const MillingPageComp = () => {
         onDelete={(row) => { if (window.confirm('Delete this milling batch?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
         mobileHiddenColumns={['id', 'milling_cost', 'broken_rice_qty', 'rice_bran_qty', 'husk_qty', 'rice_flour_qty', 'total_output', 'loss_diff']}
+        actions={<ExportButton exportType="milling_batches" params={crud.params} />}
       />
       {dialogOpen && (
         <FormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={handleSubmit}
