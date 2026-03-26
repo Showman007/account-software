@@ -83,13 +83,7 @@ class PartyLedgerService
         type: 'payment',
         id: p.id,
         date: p.date,
-        description: if p.is_reversal?
-                       p.payment_to_supplier? ? 'Refund to supplier' : 'Refund from buyer'
-                     elsif p.payment_to_supplier?
-                       'Payment to supplier'
-                     else
-                       'Receipt from buyer'
-                     end,
+        description: PAYMENT_LABELS[p.direction.to_sym][p.is_reversal? ? :reversal_label : :label],
         amount: p.amount,
         payment_mode: p.payment_mode&.name,
         reference: p.reference,
