@@ -43,6 +43,7 @@ import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useIsMobile } from '../../hooks/useIsMobile.ts';
+import ExportButton from '../common/ExportButton.tsx';
 import { useAppColors } from '../../context/ThemeContext.tsx';
 import type { AppColors } from '../../theme/colors.ts';
 import type { JournalEntry, JournalLine, JournalSummary } from '../../types/journal.ts';
@@ -541,16 +542,19 @@ const JournalPageComp = () => {
         <Typography variant="h5" fontWeight="bold">
           Journal Entries
         </Typography>
-        {isAdmin && (
-          <Button
-            variant="outlined"
-            startIcon={backfillMutation.isPending ? <CircularProgress size={16} /> : <SyncIcon />}
-            onClick={() => backfillMutation.mutate()}
-            disabled={backfillMutation.isPending}
-          >
-            Backfill Existing Data
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <ExportButton exportType="journal_entries" />
+          {isAdmin && (
+            <Button
+              variant="outlined"
+              startIcon={backfillMutation.isPending ? <CircularProgress size={16} /> : <SyncIcon />}
+              onClick={() => backfillMutation.mutate()}
+              disabled={backfillMutation.isPending}
+            >
+              Backfill Existing Data
+            </Button>
+          )}
+        </Box>
       </Box>
 
       <Paper sx={{ mb: 3 }}>

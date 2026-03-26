@@ -7,6 +7,7 @@ import { useCrud } from '../../hooks/useCrud.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { expensesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import ExportButton from '../common/ExportButton.tsx';
 import type { Expense } from '../../types/operations.ts';
 
 const ExpensesPageComp = () => {
@@ -55,6 +56,7 @@ const ExpensesPageComp = () => {
         onDelete={(row) => { if (window.confirm('Delete this expense?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
         mobileHiddenColumns={['id', 'category_id', 'paid_to', 'payment_mode_id']}
+        actions={<ExportButton exportType="expenses" params={crud.params} />}
       />
       {dialogOpen && (
         <FormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={handleSubmit}

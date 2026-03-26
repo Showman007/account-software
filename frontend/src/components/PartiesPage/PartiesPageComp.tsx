@@ -6,6 +6,7 @@ import { FormField, FormSelectField } from '../common/FormField.tsx';
 import { useCrud } from '../../hooks/useCrud.ts';
 import { partiesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import ExportButton from '../common/ExportButton.tsx';
 import type { Party } from '../../types/masters.ts';
 
 const columns: GridColDef[] = [
@@ -58,6 +59,7 @@ const PartiesPageComp = () => {
       onDelete={(row) => { if (window.confirm(`Delete party "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
       mobileHiddenColumns={['id', 'village_city', 'bank']}
+      actions={<ExportButton exportType="parties" params={crud.params} />}
     />
   );
 
