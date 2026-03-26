@@ -151,9 +151,9 @@ module Api
       def export_parties(records)
         Axlsx::Package.new do |p|
           p.workbook.add_worksheet(name: 'Parties') do |sheet|
-            sheet.add_row ['Name', 'Village/City', 'Phone', 'Type', 'Opening Balance', 'Bank Name', 'Account Number', 'IFSC']
+            sheet.add_row ['Name', 'Village/City', 'Phone', 'Type', 'Opening Balance', 'Bank', 'Account No']
             records.each do |r|
-              sheet.add_row [r.name, r.village_city, r.phone, r.party_type, r.opening_balance&.to_f, r.bank_name, r.account_number, r.ifsc_code]
+              sheet.add_row [r.name, r.village_city, r.phone, r.party_type, r.opening_balance&.to_f, r.bank, r.account_no]
             end
           end
         end
