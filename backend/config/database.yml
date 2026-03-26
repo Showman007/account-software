@@ -16,5 +16,14 @@ test:
   database: ricemill_test
 
 production:
-  <<: *default
-  database: ricemill_production
+  primary:
+    <<: *default
+    database: ricemill_production
+  cache:
+    <<: *default
+    database: ricemill_production
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *default
+    database: ricemill_production
+    migrations_paths: db/queue_migrate
