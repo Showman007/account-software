@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_25_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_26_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -177,6 +177,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_25_100000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "payment_allocations", force: :cascade do |t|
+    t.bigint "payment_id", null: false
+    t.string "allocatable_type", null: false
+    t.bigint "allocatable_id", null: false
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["allocatable_type", "allocatable_id"], name: "index_payment_allocations_on_allocatable"
+    t.index ["payment_id", "allocatable_type", "allocatable_id"], name: "index_payment_allocations_uniqueness", unique: true
+    t.index ["payment_id"], name: "index_payment_allocations_on_payment_id"
+  end
+
   create_table "payment_modes", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", null: false
@@ -269,6 +281,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_25_100000) do
   add_foreign_key "outbound_entries", "parties"
   add_foreign_key "outbound_entries", "products"
   add_foreign_key "outbound_entries", "units"
+  add_foreign_key "payment_allocations", "payments"
   add_foreign_key "payments", "parties"
   add_foreign_key "payments", "payment_modes"
   add_foreign_key "payments", "payments", column: "reversed_payment_id"

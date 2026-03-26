@@ -9,7 +9,8 @@ class PartyLedgerService
     {
       party: PartySerializer.render_as_hash(@party),
       summary: summary,
-      transactions: transaction_history
+      transactions: transaction_history,
+      bill_summary: bill_summary
     }
   end
 
@@ -49,41 +50,100 @@ class PartyLedgerService
   def transaction_history
     entries = []
 
-    inbound_entries.order(:date).each do |e|
+    inbound_entries.includes(:product, :payment_allocations).order(:date).each do |e|
       entries << {
         type: 'inbound',
+        id: e.id,
         date: e.date,
         description: "Purchase - #{e.product&.name}",
         qty: e.qty,
         amount: e.net_amt,
         paid: e.paid,
-        balance: e.balance
+        balance: e.balance,
+        allocations: e.payment_allocations.map { |a| { payment_id: a.payment_id, amount: a.amount } }
       }
     end
 
-    outbound_entries.order(:date).each do |e|
+    outbound_entries.includes(:product, :payment_allocations).order(:date).each do |e|
       entries << {
         type: 'outbound',
+        id: e.id,
         date: e.date,
         description: "Sale - #{e.product&.name}",
         qty: e.qty,
         amount: e.total_bill,
         received: e.received,
-        balance: e.balance
+        balance: e.balance,
+        allocations: e.payment_allocations.map { |a| { payment_id: a.payment_id, amount: a.amount } }
       }
     end
 
-    payments.includes(:payment_mode).order(:date).each do |p|
+    payments.includes(:payment_mode, :payment_allocations).order(:date).each do |p|
       entries << {
         type: 'payment',
+        id: p.id,
         date: p.date,
         description: p.payment_to_supplier? ? 'Payment to supplier' : 'Receipt from buyer',
         amount: p.amount,
         payment_mode: p.payment_mode&.name,
-        reference: p.reference
+        reference: p.reference,
+        allocations: p.payment_allocations.map { |a|
+          { bill_type: a.allocatable_type.underscore.humanize, bill_id: a.allocatable_id, amount: a.amount }
+        }
       }
     end
 
-    entries.sort_by { |e| e[:date] }
+    entries.sort_by { |e| [e[:date], e[:id] || 0] }
+  end
+
+  # Bill-level summary: each bill with its payment allocation breakdown
+  def bill_summary
+    bills = []
+
+    outbound_entries.includes(:product, payment_allocations: { payment: :payment_mode }).order(:date, :id).each do |e|
+      bills << {
+        type: 'outbound',
+        id: e.id,
+        date: e.date,
+        product: e.product&.name,
+        bill_amount: e.total_bill,
+        total_allocated: e.payment_allocations.sum(&:amount),
+        balance: e.balance,
+        status: e.balance.to_f <= 0 ? 'cleared' : 'pending',
+        payments: e.payment_allocations.map { |a|
+          {
+            payment_id: a.payment_id,
+            date: a.payment.date,
+            amount: a.amount,
+            reference: a.payment.reference,
+            mode: a.payment.payment_mode&.name
+          }
+        }
+      }
+    end
+
+    inbound_entries.includes(:product, payment_allocations: { payment: :payment_mode }).order(:date, :id).each do |e|
+      bills << {
+        type: 'inbound',
+        id: e.id,
+        date: e.date,
+        product: e.product&.name,
+        bill_amount: e.net_amt,
+        total_allocated: e.payment_allocations.sum(&:amount),
+        balance: e.balance,
+        status: e.balance.to_f <= 0 ? 'cleared' : 'pending',
+        payments: e.payment_allocations.map { |a|
+          {
+            payment_id: a.payment_id,
+            date: a.payment.date,
+            amount: a.amount,
+            reference: a.payment.reference,
+            mode: a.payment.payment_mode&.name
+          }
+        }
+      }
+    end
+
+    bills
   end
 end

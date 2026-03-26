@@ -37,22 +37,31 @@ module AutoPayment
 
     if payment_amount.to_f > 0
       if existing
+        # Deallocate old allocations before updating amount
+        PaymentAllocationService.deallocate(existing)
         existing.update!(
           date: date,
           party_id: party_id,
           direction: payment_direction,
           amount: payment_amount
         )
+        # Re-allocate with new amount
+        PaymentAllocationService.allocate(existing)
       else
         build_and_save_payment
       end
     elsif existing
+      PaymentAllocationService.deallocate(existing)
       existing.destroy!
     end
   end
 
   def remove_auto_payment
-    find_auto_payment&.destroy!
+    existing = find_auto_payment
+    if existing
+      PaymentAllocationService.deallocate(existing)
+      existing.destroy!
+    end
   end
 
   def build_and_save_payment

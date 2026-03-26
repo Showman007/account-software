@@ -8,6 +8,9 @@ class Payment < ApplicationRecord
   belongs_to :reversed_payment, class_name: 'Payment', optional: true
   has_one :reversal_entry, class_name: 'Payment', foreign_key: :reversed_payment_id
 
+  # Bill allocations
+  has_many :payment_allocations, dependent: :destroy
+
   enum :direction, { payment_to_supplier: 0, receipt_from_buyer: 1 }
 
   validates :date, presence: true
@@ -16,8 +19,14 @@ class Payment < ApplicationRecord
 
   scope :active, -> { where(reversed: false) }
 
+  # Auto-allocate after payment is created (skip for reversals)
+  after_create_commit :auto_allocate
+
   def reverse!
     raise "Payment already reversed" if reversed?
+
+    # Deallocate this payment's allocations first (restores bill balances)
+    PaymentAllocationService.deallocate(self)
 
     opposite_direction = payment_to_supplier? ? :receipt_from_buyer : :payment_to_supplier
 
@@ -39,5 +48,11 @@ class Payment < ApplicationRecord
 
   def is_reversal?
     reversed_payment_id.present?
+  end
+
+  private
+
+  def auto_allocate
+    PaymentAllocationService.allocate(self)
   end
 end
