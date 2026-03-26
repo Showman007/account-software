@@ -429,3 +429,157 @@ Each bill tracks its total amount, how much has been allocated from payments, an
 **Example:** A buyer has two bills — Bill A (Rs 50,000) and Bill B (Rs 30,000). If they pay Rs 60,000:
 1. Bill A is fully cleared (Rs 50,000 allocated, balance Rs 0)
 2. Bill B is partially paid (Rs 10,000 allocated, balance Rs 20,000)
+
+---
+
+## Deployment to Railway
+
+This project is pre-configured for [Railway](https://railway.app/) deployment with automatic database backups.
+
+### Step 1: Create a Railway Account
+
+1. Go to [railway.app](https://railway.app/) and sign up (GitHub login recommended)
+2. Install the Railway CLI:
+
+**Mac:**
+```bash
+brew install railway
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/railwayapp/cli/master/install.ps1 -useb | iex
+```
+
+3. Login:
+```bash
+railway login
+```
+
+### Step 2: Create a New Project
+
+```bash
+cd account-software
+railway init
+```
+
+Choose "Empty Project" when prompted.
+
+### Step 3: Add PostgreSQL
+
+```bash
+railway add --plugin postgresql
+```
+
+This creates a managed PostgreSQL instance with **automatic daily backups** and one-click restore.
+
+### Step 4: Deploy the Backend
+
+```bash
+# Link to the backend service
+cd backend
+railway link
+
+# Set environment variables
+railway variables set RAILS_ENV=production
+railway variables set SECRET_KEY_BASE=$(openssl rand -hex 64)
+railway variables set DEVISE_JWT_SECRET_KEY=$(openssl rand -hex 32)
+railway variables set RAILS_MASTER_KEY=<your-master-key>
+
+# Deploy
+railway up
+```
+
+> **Note:** `DATABASE_URL` is automatically set by Railway when PostgreSQL is linked.
+
+After deploy, Railway gives you a URL like `https://backend-production-xxxx.railway.app`. Copy this — you'll need it for the frontend.
+
+### Step 5: Deploy the Frontend
+
+```bash
+cd ../frontend
+railway link   # Select "Create new service"
+
+# Set the API URL (use your backend Railway URL from Step 4)
+railway variables set VITE_API_URL=https://backend-production-xxxx.railway.app/api/v1
+
+# Deploy
+railway up
+```
+
+### Step 6: Link Frontend URL to Backend CORS
+
+After the frontend deploys, copy its Railway URL and set it on the backend:
+
+```bash
+cd ../backend
+railway variables set FRONTEND_URL=https://frontend-production-xxxx.railway.app
+```
+
+Redeploy the backend to pick up the CORS change:
+```bash
+railway up
+```
+
+### Step 7: Seed the Database
+
+```bash
+cd backend
+railway run rails db:seed
+railway run rails allocations:backfill
+```
+
+### Step 8: Open Your App
+
+```bash
+cd ../frontend
+railway open
+```
+
+### Railway Environment Variables Reference
+
+| Variable | Where to Set | Value |
+|----------|-------------|-------|
+| `DATABASE_URL` | Backend (auto) | Set automatically by PostgreSQL addon |
+| `RAILS_ENV` | Backend | `production` |
+| `SECRET_KEY_BASE` | Backend | `openssl rand -hex 64` |
+| `DEVISE_JWT_SECRET_KEY` | Backend | `openssl rand -hex 32` |
+| `RAILS_MASTER_KEY` | Backend | Your master key from `backend/config/master.key` |
+| `FRONTEND_URL` | Backend | Your frontend Railway URL |
+| `VITE_API_URL` | Frontend | Your backend Railway URL + `/api/v1` |
+
+### Railway Database Backups
+
+Railway PostgreSQL includes:
+- **Automatic daily backups** (7-day retention)
+- **Point-in-time recovery**
+- One-click restore from the Railway dashboard under your PostgreSQL service → **Backups** tab
+
+To manually backup:
+```bash
+# Export a backup locally
+railway run pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
+
+# Restore from a local backup
+railway run psql $DATABASE_URL < backup_20260326.sql
+```
+
+### Custom Domain (Optional)
+
+In the Railway dashboard:
+1. Click your frontend service → **Settings** → **Networking**
+2. Click **Generate Domain** or add a **Custom Domain**
+3. For custom domains, add the CNAME record Railway provides to your DNS
+
+Update the backend `FRONTEND_URL` variable to match your custom domain.
+
+### Railway Cost Estimate
+
+| Service | Estimated Monthly |
+|---------|------------------|
+| Backend (Rails) | ~₹200–400 |
+| Frontend (nginx) | ~₹50–100 |
+| PostgreSQL (1 GB) | ~₹150–300 |
+| **Total** | **~₹400–800** |
+
+Railway bills based on usage. The hobby plan ($5/month credit) covers most small apps.
