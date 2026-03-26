@@ -35,7 +35,7 @@ class JournalService
       count += 1
     end
 
-    Payment.includes(:party, :payment_mode).find_each do |record|
+    Payment.where(reversed_payment_id: nil).includes(:party, :payment_mode).find_each do |record|
       next if JournalEntry.exists?(source: record)
       create_for(record)
       count += 1
@@ -151,7 +151,7 @@ class JournalService
       party = @record.party&.name
       direction_key = @record.direction.to_sym
       label_key = @record.is_reversal? ? :reversal_label : :label
-      "#{PAYMENT_LABELS[direction_key][label_key]} - #{party} via #{mode}"
+      "#{::PAYMENT_LABELS[direction_key][label_key]} - #{party} via #{mode}"
     when Expense
       "Expense: #{@record.description} - #{@record.category&.name}"
     when CreditTransaction
