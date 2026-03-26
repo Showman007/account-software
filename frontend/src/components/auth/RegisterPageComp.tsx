@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Box, Card, CardContent, TextField, Button, Typography, Link, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { APP_CONFIG } from '../../config/appConfig.ts';
 
 const RegisterPageComp = () => {
   const [email, setEmail] = useState('');
@@ -43,7 +44,7 @@ const RegisterPageComp = () => {
       <Card sx={{ width: { xs: '100%', sm: 400 }, mx: { xs: 2, sm: 0 } }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h4" align="center" fontWeight="bold" color="primary" gutterBottom>
-            Rice Mill Katha
+            {APP_CONFIG.name}
           </Typography>
           <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
             Create a new account
