@@ -53,6 +53,8 @@ class Payment < ApplicationRecord
   private
 
   def auto_allocate
+    return if is_reversal?
+
     PaymentAllocationService.allocate(self)
   end
 end
