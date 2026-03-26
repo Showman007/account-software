@@ -36,10 +36,7 @@ import { useAppColors } from '../../context/ThemeContext.tsx';
 import { useIsMobile } from '../../hooks/useIsMobile.ts';
 import type { Payment } from '../../types/transactions.ts';
 import type { QueryParams } from '../../types/common.ts';
-
-const directionOptions = [
-  { value: 'payment_to_supplier', label: 'Payment to Supplier' },
-  { value: 'receipt_from_buyer', label: 'Receipt from Buyer' },
+import { directionOptions, getPaymentLabel, getPaymentColor } from '../../config/paymentLabels.ts';
 ];
 
 const MOBILE_HIDDEN_COLUMNS = ['id', 'village_city', 'payment_mode_id', 'reference', 'remarks'];
@@ -142,20 +139,12 @@ const PaymentsPageComp = () => {
       width: 170,
       renderCell: (p) => {
         const row = p.row as Payment;
-        let label = directionOptions.find((d) => d.value === p.value)?.label ?? p.value;
-        let color: 'error' | 'success' | 'warning' = p.value === 'payment_to_supplier' ? 'error' : 'success';
-
-        // Reversal payments should show "Refund to Supplier" / "Refund from Buyer"
-        if (row.reversed_payment_id) {
-          label = p.value === 'payment_to_supplier' ? 'Refund to Supplier' : 'Refund from Buyer';
-          color = 'warning';
-        }
-
+        const isReversal = !!row.reversed_payment_id;
         return (
           <Chip
-            label={label}
+            label={getPaymentLabel(p.value as string, isReversal)}
             size="small"
-            color={color}
+            color={getPaymentColor(p.value as string, isReversal)}
             variant="filled"
             sx={{ fontSize: '0.75rem' }}
           />
@@ -316,7 +305,7 @@ const PaymentsPageComp = () => {
             <Typography variant="body2"><strong>Party:</strong> {reverseTarget ? partyMap.get(reverseTarget.party_id)?.name : ''}</Typography>
             <Typography variant="body2"><strong>Amount:</strong> {reverseTarget ? formatINR(reverseTarget.amount) : ''}</Typography>
             <Typography variant="body2">
-              <strong>Direction:</strong> {directionOptions.find(d => d.value === reverseTarget?.direction)?.label}
+              <strong>Direction:</strong> {reverseTarget ? getPaymentLabel(reverseTarget.direction, false) : ''}
             </Typography>
           </Box>
           <DialogContentText sx={{ mt: 2 }}>

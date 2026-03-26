@@ -149,13 +149,9 @@ class JournalService
     when Payment
       mode = @record.payment_mode&.name || 'Cash'
       party = @record.party&.name
-      if @record.is_reversal?
-        @record.payment_to_supplier? ? "Refund to #{party} via #{mode}" : "Refund from #{party} via #{mode}"
-      elsif @record.payment_to_supplier?
-        "Payment to #{party} via #{mode}"
-      else
-        "Receipt from #{party} via #{mode}"
-      end
+      direction_key = @record.direction.to_sym
+      label_key = @record.is_reversal? ? :reversal_label : :label
+      "#{PAYMENT_LABELS[direction_key][label_key]} - #{party} via #{mode}"
     when Expense
       "Expense: #{@record.description} - #{@record.category&.name}"
     when CreditTransaction

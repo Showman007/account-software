@@ -88,7 +88,7 @@ function transformTransactions(
       balance += debit;
     } else if (type === 'payment') {
       const desc = t.description as string;
-      if (desc?.includes('supplier') || desc?.includes('Payment to')) {
+      if (desc?.includes('Supplier')) {
         debit = Number(t.amount || 0);
         balance -= debit;
       } else {
