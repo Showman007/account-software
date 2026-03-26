@@ -13,13 +13,22 @@ module Journalable
   private
 
   def create_journal_entry
+    # Skip journal creation for reversal payments — they are not real transactions.
+    # The original payment's update callback handles the reversal journal entry.
+    return if is_a?(Payment) && is_reversal?
+
     JournalService.create_for(self)
   rescue StandardError => e
     Rails.logger.error("Failed to create journal entry for #{self.class}##{id}: #{e.message}")
   end
 
   def update_journal_entry
-    JournalService.reverse_and_recreate_for(self)
+    # When a payment is marked as reversed, only reverse the journal — don't recreate.
+    if is_a?(Payment) && reversed? && saved_change_to_reversed?
+      JournalService.reverse_for(self)
+    else
+      JournalService.reverse_and_recreate_for(self)
+    end
   rescue StandardError => e
     Rails.logger.error("Failed to update journal entry for #{self.class}##{id}: #{e.message}")
   end
