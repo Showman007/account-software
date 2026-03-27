@@ -7,6 +7,8 @@ import { useCrud } from '../../hooks/useCrud.ts';
 import { partiesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { Party } from '../../types/masters.ts';
 
 const columns: GridColDef[] = [
@@ -23,6 +25,10 @@ const partyTypeOptions = [
   { value: 'supplier', label: 'Supplier' },
   { value: 'buyer', label: 'Buyer' },
   { value: 'both', label: 'Both' },
+];
+
+const filterConfig: FilterFieldConfig[] = [
+  { type: 'select', name: 'party_type', label: 'Type', options: partyTypeOptions },
 ];
 
 const PartiesPageComp = () => {
@@ -58,6 +64,7 @@ const PartiesPageComp = () => {
       onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
       onDelete={(row) => { if (window.confirm(`Delete party "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+      searchPlaceholder="Search by party name..."
       mobileHiddenColumns={['id', 'village_city', 'bank']}
       actions={<ExportButton exportType="parties" params={crud.params} />}
     />
@@ -89,6 +96,7 @@ const PartiesPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       {tableComp()}
       {formComp()}
     </>

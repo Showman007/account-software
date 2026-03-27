@@ -15,10 +15,6 @@ import {
   TableRow,
   IconButton,
   Collapse,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Button,
   CircularProgress,
   TablePagination,
@@ -44,6 +40,8 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useIsMobile } from '../../hooks/useIsMobile.ts';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import { useAppColors } from '../../context/ThemeContext.tsx';
 import type { AppColors } from '../../theme/colors.ts';
 import type { JournalEntry, JournalLine, JournalSummary } from '../../types/journal.ts';
@@ -233,7 +231,12 @@ function JournalTableHead() {
   );
 }
 
-function FilterBar({
+const journalFilterConfig: FilterFieldConfig[] = [
+  { type: 'select', name: 'entry_type', label: 'Entry Type', options: Object.entries(entryTypeLabels).map(([value, label]) => ({ value, label })) },
+  { type: 'date_range' },
+];
+
+function JournalFilterBar({
   search,
   setSearch,
   onSearchSubmit,
@@ -247,53 +250,27 @@ function FilterBar({
   updateParams: (p: Partial<QueryParams>) => void;
 }) {
   return (
-    <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-      <TextField
-        size="small"
-        placeholder="Search narration..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && onSearchSubmit()}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          },
-        }}
-        sx={{ width: { xs: '100%', sm: 300 } }}
-      />
-      <FormControl size="small" sx={{ minWidth: 160 }}>
-        <InputLabel>Entry Type</InputLabel>
-        <Select
-          value={params.entry_type || ''}
-          label="Entry Type"
-          onChange={(e) => updateParams({ entry_type: e.target.value || undefined, page: 1 })}
-        >
-          <MenuItem value="">All Types</MenuItem>
-          {Object.entries(entryTypeLabels).map(([key, label]) => (
-            <MenuItem key={key} value={key}>{label}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <TextField
-        size="small"
-        type="date"
-        label="From Date"
-        slotProps={{ inputLabel: { shrink: true } }}
-        value={params.from_date || ''}
-        onChange={(e) => updateParams({ from_date: e.target.value || undefined, page: 1 })}
-      />
-      <TextField
-        size="small"
-        type="date"
-        label="To Date"
-        slotProps={{ inputLabel: { shrink: true } }}
-        value={params.to_date || ''}
-        onChange={(e) => updateParams({ to_date: e.target.value || undefined, page: 1 })}
-      />
+    <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 1, flexWrap: 'wrap' }}>
+        <TextField
+          size="small"
+          placeholder="Search narration..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && onSearchSubmit()}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            },
+          }}
+          sx={{ width: { xs: '100%', sm: 300 } }}
+        />
+      </Box>
+      <FilterBar filters={journalFilterConfig} params={params} updateParams={updateParams} />
     </Box>
   );
 }
@@ -331,7 +308,7 @@ function PaginatedView() {
     <>
       {summary && <SummaryCards summary={summary} />}
 
-      <FilterBar
+      <JournalFilterBar
         search={search}
         setSearch={setSearch}
         onSearchSubmit={() => updateParams({ q: search, page: 1 })}
@@ -408,7 +385,7 @@ function AllDataView() {
     <>
       {summary && <SummaryCards summary={summary} />}
 
-      <FilterBar
+      <JournalFilterBar
         search={search}
         setSearch={setSearch}
         onSearchSubmit={() => updateParams({ q: search })}

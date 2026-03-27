@@ -32,6 +32,7 @@ const UnitsPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete unit "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by unit name..."
         mobileHiddenColumns={['id']}
       />
       {dialogOpen && (

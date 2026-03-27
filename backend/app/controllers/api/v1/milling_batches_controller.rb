@@ -5,6 +5,7 @@ module Api
         scope = policy_scope(MillingBatch)
         scope = scope.where('paddy_type ILIKE ? OR miller_name ILIKE ?', "%#{params[:q]}%", "%#{params[:q]}%") if params[:q].present?
         scope = apply_filters(scope)
+        scope = apply_numeric_filters(scope, %w[input_qty rice_main_qty milling_cost])
         scope = apply_sorting(scope)
 
         records, meta = paginate(scope)

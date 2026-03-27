@@ -9,6 +9,8 @@ import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { creditTransactionsApi, partnersApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { CreditTransaction, Partner } from '../../types/partners.ts';
 
 const txnTypeOptions = [
@@ -33,6 +35,13 @@ const CreditTransactionsPageComp = () => {
   const partnerMap = useMemo(() => { const m = new Map<number, Partner>(); for (const p of partners) m.set(p.id, p); return m; }, [partners]);
   const partnerOptions = useMemo(() => partners.map((p) => ({ value: p.id, label: p.name })), [partners]);
   const modeOptions = useMemo(() => paymentModes.map((m) => ({ value: m.id, label: m.name })), [paymentModes]);
+
+  const filterConfig: FilterFieldConfig[] = useMemo(() => [
+    { type: 'select', name: 'partner_id', label: 'Partner', options: partnerOptions },
+    { type: 'select', name: 'transaction_type', label: 'Type', options: txnTypeOptions },
+    { type: 'date_range' },
+    { type: 'numeric', name: 'credit_received', label: 'Credit Amt' },
+  ], [partnerOptions]);
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 60 },
@@ -59,6 +68,7 @@ const CreditTransactionsPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       <DataTable title="Credit Transactions" columns={columns} rows={crud.data} loading={crud.isLoading}
         totalCount={crud.meta?.total_count ?? 0}
         paginationModel={{ page: (crud.params.page ?? 1) - 1, pageSize: crud.params.per_page ?? 25 }}
@@ -67,6 +77,7 @@ const CreditTransactionsPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this transaction?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by partner name..."
         mobileHiddenColumns={['id', 'credit_received', 'principal_returned', 'profit_paid', 'payment_mode_id', 'used_for']}
         actions={<ExportButton exportType="credit_transactions" params={crud.params} />}
       />

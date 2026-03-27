@@ -31,6 +31,7 @@ const ExpenseCategoriesPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete category "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by category name..."
         mobileHiddenColumns={['id']}
       />
       {dialogOpen && (

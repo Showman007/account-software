@@ -7,10 +7,16 @@ import { FormField, FormDateField, FormSelectField } from '../common/FormField.t
 import { useCrud } from '../../hooks/useCrud.ts';
 import { partnersApi } from '../../api/resources.ts';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { Partner } from '../../types/partners.ts';
 
 const shareTypeOptions = [{ value: 'percentage', label: 'Percentage' }, { value: 'fixed', label: 'Fixed' }];
 const statusOptions = [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }];
+
+const filterConfig: FilterFieldConfig[] = [
+  { type: 'select', name: 'status', label: 'Status', options: statusOptions },
+];
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 60 },
@@ -39,6 +45,7 @@ const PartnersPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       <DataTable title="Partners" columns={columns} rows={crud.data} loading={crud.isLoading}
         totalCount={crud.meta?.total_count ?? 0}
         paginationModel={{ page: (crud.params.page ?? 1) - 1, pageSize: crud.params.per_page ?? 25 }}
@@ -47,6 +54,7 @@ const PartnersPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete partner "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by partner name..."
         mobileHiddenColumns={['id', 'date_joined', 'profit_share_rate']}
         actions={<ExportButton exportType="partners" params={crud.params} />}
       />

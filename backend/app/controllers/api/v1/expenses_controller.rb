@@ -6,6 +6,7 @@ module Api
         scope = scope.where('description ILIKE ?', "%#{params[:q]}%") if params[:q].present?
         scope = scope.where(category_id: params[:category_id]) if params[:category_id].present?
         scope = apply_filters(scope)
+        scope = apply_numeric_filters(scope, %w[amount])
         scope = apply_sorting(scope)
 
         records, meta = paginate(scope)

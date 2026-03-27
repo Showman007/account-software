@@ -5,6 +5,7 @@ module Api
         scope = policy_scope(StockItem).includes(:product, :unit)
         scope = scope.joins(:product).where('products.name ILIKE ?', "%#{params[:q]}%") if params[:q].present?
         scope = scope.where(status: params[:status]) if params[:status].present?
+        scope = apply_numeric_filters(scope, %w[current_stock opening_stock])
         scope = apply_sorting(scope)
 
         records, meta = paginate(scope)
