@@ -34,6 +34,7 @@ const UsersPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete user "${row.email}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by email..."
         mobileHiddenColumns={['id']}
       />
       {dialogOpen && (

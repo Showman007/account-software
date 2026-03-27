@@ -9,6 +9,8 @@ import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { outboundEntriesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import { CATEGORY_OPTIONS, ProductCategorySync } from '../../utils/categoryUtils.tsx';
 import type { OutboundEntry } from '../../types/transactions.ts';
 
@@ -29,6 +31,15 @@ const OutboundPageComp = () => {
   );
 
   const unitOptions = useMemo(() => units.map((u) => ({ value: u.id, label: `${u.name} (${u.abbreviation})` })), [units]);
+
+  const filterConfig: FilterFieldConfig[] = useMemo(() => [
+    { type: 'autocomplete', name: 'party_id', label: 'Party', options: partyOptions },
+    { type: 'select', name: 'product_id', label: 'Product', options: outboundProducts },
+    { type: 'date_range' },
+    { type: 'numeric', name: 'qty', label: 'Quantity' },
+    { type: 'numeric', name: 'rate', label: 'Rate' },
+    { type: 'numeric', name: 'total_bill', label: 'Total Bill' },
+  ], [partyOptions, outboundProducts]);
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 60 },
@@ -79,6 +90,7 @@ const OutboundPageComp = () => {
       onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
       onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+      searchPlaceholder="Search by party name..."
       mobileHiddenColumns={['id', 'city', 'category', 'qty', 'unit_id', 'rate', 'amount', 'transport', 'received']}
       actions={<ExportButton exportType="outbound_entries" params={crud.params} />}
     />
@@ -120,6 +132,7 @@ const OutboundPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       {tableComp()}
       {formComp()}
     </>

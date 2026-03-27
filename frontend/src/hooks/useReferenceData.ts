@@ -5,8 +5,10 @@ import {
   expenseCategoriesApi,
   paymentModesApi,
   partiesApi,
+  partnersApi,
 } from '../api/resources.ts';
 import type { Product, Unit, ExpenseCategory, PaymentMode, Party } from '../types/masters.ts';
+import type { Partner } from '../types/partners.ts';
 
 export function useReferenceData() {
   const { data: productsData } = useQuery({
@@ -39,11 +41,18 @@ export function useReferenceData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: partnersData } = useQuery({
+    queryKey: ['partners', 'all'],
+    queryFn: () => partnersApi.getAll({ per_page: 1000 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const products = productsData?.data ?? [];
   const units = unitsData?.data ?? [];
   const expenseCategories = expenseCategoriesData?.data ?? [];
   const paymentModes = paymentModesData?.data ?? [];
   const parties = partiesData?.data ?? [];
+  const partners = partnersData?.data ?? [];
 
   const productMap = new Map<number, Product>();
   for (const p of products) productMap.set(p.id, p);
@@ -60,16 +69,21 @@ export function useReferenceData() {
   const partyMap = new Map<number, Party>();
   for (const p of parties) partyMap.set(p.id, p);
 
+  const partnerMap = new Map<number, Partner>();
+  for (const p of partners) partnerMap.set(p.id, p);
+
   return {
     products,
     units,
     expenseCategories,
     paymentModes,
     parties,
+    partners,
     productMap,
     unitMap,
     expenseCategoryMap,
     paymentModeMap,
     partyMap,
+    partnerMap,
   };
 }

@@ -11,7 +11,20 @@ import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { stockItemsApi, recalculateStock } from '../../api/resources.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { StockItem } from '../../types/operations.ts';
+
+const stockStatusOptions = [
+  { value: 'in_stock', label: 'In Stock' },
+  { value: 'low', label: 'Low' },
+  { value: 'out_of_stock', label: 'Out of Stock' },
+];
+
+const filterConfig: FilterFieldConfig[] = [
+  { type: 'select', name: 'status', label: 'Status', options: stockStatusOptions },
+  { type: 'numeric', name: 'current_stock', label: 'Current Stock' },
+];
 
 const StockPageComp = () => {
   const crud = useCrud<StockItem>('stock_items', stockItemsApi);
@@ -57,12 +70,14 @@ const StockPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       <DataTable title="Stock Items" columns={columns} rows={crud.data} loading={crud.isLoading}
         totalCount={crud.meta?.total_count ?? 0}
         paginationModel={{ page: (crud.params.page ?? 1) - 1, pageSize: crud.params.per_page ?? 25 }}
         onPaginationChange={(m) => crud.updateParams({ page: m.page + 1, per_page: m.pageSize })}
         onEdit={isAdmin ? (row) => { setEditing(row); setDialogOpen(true); } : undefined}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by product name..."
         mobileHiddenColumns={['id', 'unit_id', 'opening_stock', 'total_inbound', 'from_milling', 'total_outbound', 'min_level']}
         actions={<><ExportButton exportType="stock_items" params={crud.params} />{isAdmin && <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRecalculate} disabled={recalculating}>{recalculating ? 'Recalculating...' : 'Recalculate'}</Button>}</>}
       />

@@ -8,7 +8,16 @@ import { useCrud } from '../../hooks/useCrud.ts';
 import { millingBatchesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { MillingBatch } from '../../types/operations.ts';
+
+const filterConfig: FilterFieldConfig[] = [
+  { type: 'date_range' },
+  { type: 'numeric', name: 'input_qty', label: 'Input Qty' },
+  { type: 'numeric', name: 'rice_main_qty', label: 'Rice Qty' },
+  { type: 'numeric', name: 'milling_cost', label: 'Cost' },
+];
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 60 },
@@ -48,6 +57,7 @@ const MillingPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       <DataTable title="Milling Batches" columns={columns} rows={crud.data} loading={crud.isLoading}
         totalCount={crud.meta?.total_count ?? 0}
         paginationModel={{ page: (crud.params.page ?? 1) - 1, pageSize: crud.params.per_page ?? 25 }}
@@ -56,6 +66,7 @@ const MillingPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this milling batch?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by paddy type or miller..."
         mobileHiddenColumns={['id', 'milling_cost', 'broken_rice_qty', 'rice_bran_qty', 'husk_qty', 'rice_flour_qty', 'total_output', 'loss_diff']}
         actions={<ExportButton exportType="milling_batches" params={crud.params} />}
       />

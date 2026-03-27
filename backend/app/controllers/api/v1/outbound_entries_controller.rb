@@ -7,6 +7,7 @@ module Api
         scope = scope.where(party_id: params[:party_id]) if params[:party_id].present?
         scope = scope.where(product_id: params[:product_id]) if params[:product_id].present?
         scope = apply_filters(scope)
+        scope = apply_numeric_filters(scope, %w[qty rate amount total_bill])
         scope = apply_sorting(scope)
 
         records, meta = paginate(scope)

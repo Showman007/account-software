@@ -7,6 +7,7 @@ module Api
         scope = scope.where(partner_id: params[:partner_id]) if params[:partner_id].present?
         scope = scope.where(transaction_type: params[:transaction_type]) if params[:transaction_type].present?
         scope = apply_filters(scope)
+        scope = apply_numeric_filters(scope, %w[credit_received principal_returned profit_paid])
         scope = apply_sorting(scope)
 
         records, meta = paginate(scope)

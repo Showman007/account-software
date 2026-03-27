@@ -35,6 +35,8 @@ import { useAuth } from '../../context/AuthContext.tsx';
 import { useAppColors } from '../../context/ThemeContext.tsx';
 import { useIsMobile } from '../../hooks/useIsMobile.ts';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { Payment } from '../../types/transactions.ts';
 import type { QueryParams } from '../../types/common.ts';
 import { directionOptions, getPaymentLabel, getPaymentColor } from '../../config/paymentLabels.ts';
@@ -122,6 +124,13 @@ const PaymentsPageComp = () => {
 
   const partyOptions = useMemo(() => parties.map((p) => ({ id: p.id, label: p.name })), [parties]);
   const modeOptions = useMemo(() => paymentModes.map((m) => ({ value: m.id, label: m.name })), [paymentModes]);
+
+  const filterConfig: FilterFieldConfig[] = useMemo(() => [
+    { type: 'autocomplete', name: 'party_id', label: 'Party', options: partyOptions },
+    { type: 'select', name: 'direction', label: 'Direction', options: directionOptions },
+    { type: 'date_range' },
+    { type: 'numeric', name: 'amount', label: 'Amount' },
+  ], [partyOptions]);
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 60 },
@@ -221,6 +230,8 @@ const PaymentsPageComp = () => {
           )}
         </Box>
       </Box>
+
+      <FilterBar filters={filterConfig} params={params} updateParams={updateParams} />
 
       <Box sx={{ mb: 2 }}>
         <TextField

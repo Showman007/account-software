@@ -22,6 +22,7 @@ interface DataTableProps<T> {
   title: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
   actions?: React.ReactNode;
   mobileHiddenColumns?: string[];
 }
@@ -39,6 +40,7 @@ export default function DataTable<T extends { id: number }>({
   title,
   searchValue,
   onSearchChange,
+  searchPlaceholder = 'Search...',
   actions,
   mobileHiddenColumns,
 }: DataTableProps<T>) {
@@ -102,7 +104,7 @@ export default function DataTable<T extends { id: number }>({
         <Box sx={{ mb: 2 }}>
           <TextField
             size="small"
-            placeholder="Search..."
+            placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleSearchKeyDown}

@@ -31,6 +31,7 @@ const PaymentModesPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm(`Delete payment mode "${row.name}"?`)) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by mode name..."
         mobileHiddenColumns={['id']}
       />
       {dialogOpen && (

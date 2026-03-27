@@ -8,6 +8,8 @@ import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { expensesApi } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import ExportButton from '../common/ExportButton.tsx';
+import FilterBar from '../common/FilterBar.tsx';
+import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { Expense } from '../../types/operations.ts';
 
 const ExpensesPageComp = () => {
@@ -18,6 +20,12 @@ const ExpensesPageComp = () => {
 
   const categoryOptions = useMemo(() => expenseCategories.map((c) => ({ value: c.id, label: c.name })), [expenseCategories]);
   const modeOptions = useMemo(() => paymentModes.map((m) => ({ value: m.id, label: m.name })), [paymentModes]);
+
+  const filterConfig: FilterFieldConfig[] = useMemo(() => [
+    { type: 'select', name: 'category_id', label: 'Category', options: categoryOptions },
+    { type: 'date_range' },
+    { type: 'numeric', name: 'amount', label: 'Amount' },
+  ], [categoryOptions]);
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 60 },
@@ -47,6 +55,7 @@ const ExpensesPageComp = () => {
 
   return (
     <>
+      <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       <DataTable title="Expenses" columns={columns} rows={crud.data} loading={crud.isLoading}
         totalCount={crud.meta?.total_count ?? 0}
         paginationModel={{ page: (crud.params.page ?? 1) - 1, pageSize: crud.params.per_page ?? 25 }}
@@ -55,6 +64,7 @@ const ExpensesPageComp = () => {
         onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
         onDelete={(row) => { if (window.confirm('Delete this expense?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
+        searchPlaceholder="Search by description..."
         mobileHiddenColumns={['id', 'category_id', 'paid_to', 'payment_mode_id']}
         actions={<ExportButton exportType="expenses" params={crud.params} />}
       />
