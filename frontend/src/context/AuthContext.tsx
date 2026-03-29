@@ -9,6 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
   register: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -39,6 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
   }, []);
 
+  const googleLogin = useCallback(async (credential: string) => {
+    const u = await authApi.googleLogin(credential);
+    setUser(u);
+  }, []);
+
   const register = useCallback(
     async (email: string, password: string, passwordConfirmation: string) => {
       const u = await authApi.register(email, password, passwordConfirmation);
@@ -56,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isAdmin, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isAdmin, loading, login, googleLogin, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

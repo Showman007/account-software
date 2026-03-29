@@ -1,5 +1,7 @@
-import { Alert, Box, Button, Card, CardContent, Link, TextField, Typography } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Alert, Box, Button, Card, CardContent, Divider, TextField, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
 
 import { useAuth } from '../../context/AuthContext.tsx';
 import { APP_CONFIG } from '../../config/appConfig.ts';
@@ -10,7 +12,8 @@ const LoginPageComp = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [googleFailed, setGoogleFailed] = useState(false);
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,6 +28,36 @@ const LoginPageComp = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (response: CredentialResponse) => {
+    if (!response.credential) {
+      setError('Google sign-in failed: No credential received');
+      setGoogleFailed(true);
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await googleLogin(response.credential);
+      navigate('/');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setError(axiosErr?.response?.data?.error || 'Google sign-in failed. Please try again.');
+      setGoogleFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google sign-in was cancelled or failed');
+    setGoogleFailed(true);
+  };
+
+  const handleRetryGoogle = () => {
+    setError('');
+    setGoogleFailed(false);
   };
 
   return (
@@ -50,6 +83,40 @@ const LoginPageComp = () => {
               {error}
             </Alert>
           )}
+
+          {/* Google SSO Button — hide after failure to prevent auto-retry loop */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            {googleFailed ? (
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={handleRetryGoogle}
+                sx={{ py: 1.2 }}
+              >
+                Try Google Sign-In Again
+              </Button>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                width="350"
+                theme="filled_blue"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                auto_select={false}
+                cancel_on_tap_outside
+              />
+            )}
+          </Box>
+
+          <Divider sx={{ my: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              OR
+            </Typography>
+          </Divider>
+
+          {/* Email/Password Form */}
           <form onSubmit={handleSubmit}>
             <TextField
               label="Email"
@@ -73,12 +140,6 @@ const LoginPageComp = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          {/* <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-            Don't have an account?{' '}
-            <Link component={RouterLink} to="/register">
-              Register
-            </Link>
-          </Typography> */}
         </CardContent>
       </Card>
     </Box>

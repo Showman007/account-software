@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -37,6 +38,8 @@ import ImportExportPage from './pages/ImportExportPage.tsx';
 import UsersPage from './pages/UsersPage.tsx';
 import JournalPage from './pages/JournalPage.tsx';
 import QueryRunnerPage from './pages/QueryRunnerPage.tsx';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,9 +104,11 @@ function ThemedApp() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeContextProvider>
-        <ThemedApp />
-      </ThemeContextProvider>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <ThemeContextProvider>
+          <ThemedApp />
+        </ThemeContextProvider>
+      </GoogleOAuthProvider>
     </QueryClientProvider>
   );
 }

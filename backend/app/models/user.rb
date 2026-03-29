@@ -17,6 +17,31 @@ class User < ApplicationRecord
 
   before_create :set_jti
 
+  # SSO users don't need a password
+  def password_required?
+    provider.blank? && super
+  end
+
+  # Find existing user from Google SSO (no auto-creation)
+  def self.from_google(payload)
+    user = find_by(google_uid: payload["sub"]) || find_by(email: payload["email"])
+
+    unless user
+      raise ActiveRecord::RecordNotFound, "No account found for #{payload['email']}. Please contact your admin."
+    end
+
+    # Link existing user to Google if not already linked
+    unless user.google_uid
+      user.update!(
+        provider: "google",
+        google_uid: payload["sub"],
+        avatar_url: payload["picture"]
+      )
+    end
+
+    user
+  end
+
   private
 
   def set_jti

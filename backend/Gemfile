@@ -52,6 +52,9 @@ gem "caxlsx"
 gem "google-apis-drive_v3"
 gem "googleauth"
 
+# Google SSO (ID token verification)
+gem "google-id-token"
+
 # PDF generation
 gem "matrix" # required by prawn on Ruby 3.1+
 gem "prawn"

@@ -20,8 +20,8 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url || '';
-      // Don't redirect on login attempt — let the login form show the error
-      if (!requestUrl.includes('/auth/sign_in')) {
+      // Don't redirect on login attempts — let the login form show the error
+      if (!requestUrl.includes('/auth/sign_in') && !requestUrl.includes('/auth/google')) {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }
