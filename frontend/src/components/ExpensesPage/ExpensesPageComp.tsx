@@ -1,6 +1,4 @@
 import { useState, useMemo, useRef } from 'react';
-import { Chip } from '@mui/material';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import type { GridColDef } from '@mui/x-data-grid';
 import DataTable from '../common/DataTable.tsx';
 import FormDialog from '../common/FormDialog.tsx';
@@ -10,6 +8,7 @@ import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { expensesApi, uploadAttachment } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import FileAttachment from '../common/FileAttachment.tsx';
+import AttachmentChip from '../common/AttachmentChip.tsx';
 import ExportButton from '../common/ExportButton.tsx';
 import FilterBar from '../common/FilterBar.tsx';
 import type { FilterFieldConfig } from '../common/FilterBar.tsx';
@@ -45,7 +44,7 @@ const ExpensesPageComp = () => {
       field: 'attachment', headerName: 'File', width: 70, sortable: false,
       renderCell: (p) => {
         const att = p.row.attachment;
-        return att ? <Chip icon={<AttachFileIcon />} label="" size="small" color="primary" variant="outlined" clickable /> : null;
+        return att ? <AttachmentChip attachment={att} /> : null;
       },
     },
   ];
@@ -100,7 +99,7 @@ const ExpensesPageComp = () => {
         onDelete={(row) => { if (window.confirm('Delete this expense?')) crud.deleteMutation.mutate(row.id); }}
         onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
         searchPlaceholder="Search by description..."
-        mobileHiddenColumns={['id', 'category_id', 'paid_to', 'payment_mode_id', 'attachment']}
+        mobileHiddenColumns={['id', 'category_id', 'paid_to', 'payment_mode_id']}
         actions={<ExportButton exportType="expenses" params={crud.params} />}
       />
       {dialogOpen && (

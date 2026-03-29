@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { TextField, Chip } from '@mui/material';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { TextField } from '@mui/material';
 import type { GridColDef } from '@mui/x-data-grid';
 import DataTable from '../common/DataTable.tsx';
 import FormDialog from '../common/FormDialog.tsx';
@@ -10,6 +9,7 @@ import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { inboundEntriesApi, uploadAttachment } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
 import FileAttachment from '../common/FileAttachment.tsx';
+import AttachmentChip from '../common/AttachmentChip.tsx';
 import BillButton from '../common/BillButton.tsx';
 import ExportButton from '../common/ExportButton.tsx';
 import FilterBar from '../common/FilterBar.tsx';
@@ -65,7 +65,7 @@ const InboundPageComp = () => {
       field: 'attachment', headerName: 'File', width: 70, sortable: false,
       renderCell: (p) => {
         const att = p.row.attachment;
-        return att ? <Chip icon={<AttachFileIcon />} label="" size="small" color="primary" variant="outlined" clickable /> : null;
+        return att ? <AttachmentChip attachment={att} /> : null;
       },
     },
     {
@@ -130,7 +130,7 @@ const InboundPageComp = () => {
       onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
       searchPlaceholder="Search by party name..."
-      mobileHiddenColumns={['id', 'village', 'category', 'qty', 'unit_id', 'rate', 'gross_amt', 'moisture_pct', 'paid', 'attachment', 'bill']}
+      mobileHiddenColumns={['id', 'village', 'category', 'qty', 'unit_id', 'rate', 'gross_amt', 'moisture_pct', 'paid']}
       actions={<ExportButton exportType="inbound_entries" params={crud.params} />}
     />
   );
