@@ -92,7 +92,17 @@ const OutboundPageComp = () => {
 
   const handleSubmit = (data: Record<string, unknown>) => {
     if (editing) {
-      crud.updateMutation.mutate({ id: editing.id, data: data as Partial<OutboundEntry> }, { onSuccess: () => setDialogOpen(false) });
+      crud.updateMutation.mutate({ id: editing.id, data: data as Partial<OutboundEntry> }, {
+        onSuccess: () => {
+          const file = stagedFileRef.current;
+          if (file && editing.id) {
+            uploadAttachment('outbound_entries', editing.id, file).catch(() => {});
+          }
+          setStagedFile(null);
+          stagedFileRef.current = null;
+          setDialogOpen(false);
+        },
+      });
     } else {
       crud.createMutation.mutate(data as Partial<OutboundEntry>, {
         onSuccess: (result) => {
@@ -164,24 +174,14 @@ const OutboundPageComp = () => {
               <TextField label="Balance" value={formatINR(editing.balance)} disabled fullWidth />
             </>
           )}
-          {editing ? (
-            <FileAttachment
-              attachableType="outbound_entries"
-              recordId={editing.id}
-              attachment={editing.attachment}
-              queryKey="outbound_entries"
-            />
-          ) : (
-            <FileAttachment
-              attachableType="outbound_entries"
-              recordId={0}
-              attachment={null}
-              queryKey="outbound_entries"
-              stageOnly
-              stagedFile={stagedFile}
-              onFileSelect={handleStagedFile}
-            />
-          )}
+          <FileAttachment
+            attachableType="outbound_entries"
+            recordId={editing?.id ?? 0}
+            attachment={editing?.attachment ?? null}
+            queryKey="outbound_entries"
+            stagedFile={stagedFile}
+            onFileSelect={handleStagedFile}
+          />
         </FormDialog>
       )}
     </>
