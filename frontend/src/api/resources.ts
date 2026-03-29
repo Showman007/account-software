@@ -152,7 +152,7 @@ export async function deleteAttachment(
 }
 
 // Bill PDF generation
-export type BillType = 'customer_invoice' | 'credit_note' | 'payment_receipt';
+export type BillType = 'customer_invoice' | 'credit_note' | 'payment_receipt' | 'refund_receipt';
 
 export function getBillUrl(billType: BillType, id: number): string {
   const base = apiClient.defaults.baseURL || '';
