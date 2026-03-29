@@ -8,9 +8,11 @@ RUN npm ci
 
 COPY . .
 
-# VITE_API_URL is set at build time via Railway environment variable
+# Build-time environment variables (set via Railway)
 ARG VITE_API_URL
+ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 RUN npm run build
 
