@@ -60,6 +60,7 @@ Rails.application.routes.draw do
       get 'profit_calculator', to: 'profit_calculator#index'
 
       # Attachments (Google Drive)
+      get ':attachable_type/:attachable_id/attachment', to: 'attachments#show', as: :show_attachment
       post ':attachable_type/:attachable_id/attachment', to: 'attachments#create', as: :create_attachment
       delete ':attachable_type/:attachable_id/attachment', to: 'attachments#destroy', as: :destroy_attachment
 

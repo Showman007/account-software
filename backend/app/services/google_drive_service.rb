@@ -41,6 +41,15 @@ class GoogleDriveService
     }
   end
 
+  def download(file_id)
+    io = StringIO.new
+    @drive.get_file(file_id, download_dest: io)
+    io.rewind
+    io.read
+  rescue Google::Apis::ClientError => e
+    raise DriveError, "Failed to download file: #{e.message}"
+  end
+
   def delete(file_id)
     @drive.delete_file(file_id)
     true
