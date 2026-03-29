@@ -12,6 +12,15 @@ export async function login(email: string, password: string): Promise<User> {
   return user;
 }
 
+export async function googleLogin(credential: string): Promise<User> {
+  const response = await apiClient.post('/auth/google', { credential });
+  const { token, user } = response.data;
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+  return user;
+}
+
 export async function register(
   email: string,
   password: string,

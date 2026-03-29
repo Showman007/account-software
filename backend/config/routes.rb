@@ -8,6 +8,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       # Authentication
       post 'auth/sign_in', to: 'auth#sign_in'
+      post 'auth/google', to: 'auth#google'
       delete 'auth/sign_out', to: 'auth#sign_out'
       get 'auth/me', to: 'auth#me'
       post 'auth/register', to: 'registrations#create'
