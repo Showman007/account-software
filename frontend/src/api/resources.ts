@@ -116,6 +116,46 @@ export function getExportUrl(type: string, filterParams?: Record<string, string>
   return `${base}/exports/${type}${qs ? `?${qs}` : ''}`;
 }
 
+// Attachments (Google Drive)
+import type { Attachment } from '../types/common.ts';
+
+export type AttachableType = 'outbound_entries' | 'inbound_entries' | 'expenses';
+
+export async function uploadAttachment(
+  type: AttachableType,
+  id: number,
+  file: File
+): Promise<{ data: Attachment }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiClient.post(`/${type}/${id}/attachment`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+}
+
+export async function deleteAttachment(
+  type: AttachableType,
+  id: number
+): Promise<void> {
+  await apiClient.delete(`/${type}/${id}/attachment`);
+}
+
+// Bill PDF generation
+export type BillType = 'customer_invoice' | 'credit_note' | 'payment_receipt';
+
+export function getBillUrl(billType: BillType, id: number): string {
+  const base = apiClient.defaults.baseURL || '';
+  return `${base}/bills/${billType}/${id}`;
+}
+
+export async function downloadBillPdf(billType: BillType, id: number): Promise<Blob> {
+  const response = await apiClient.get(`/bills/${billType}/${id}`, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
 // Query Runner
 export async function executeQuery(sql: string): Promise<QueryResult> {
   const response = await apiClient.post('/query_runner', { sql });

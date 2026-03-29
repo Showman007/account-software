@@ -2,7 +2,7 @@ module Api
   module V1
     class ExpensesController < BaseController
       def index
-        scope = policy_scope(Expense).includes(:category, :payment_mode)
+        scope = policy_scope(Expense).includes(:category, :payment_mode, :attachment)
         scope = scope.where('description ILIKE ?', "%#{params[:q]}%") if params[:q].present?
         scope = scope.where(category_id: params[:category_id]) if params[:category_id].present?
         scope = apply_filters(scope)

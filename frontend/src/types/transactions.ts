@@ -1,5 +1,7 @@
 /** Transaction types — Inbound, Outbound, Payments */
 
+import type { Attachment } from './common.ts';
+
 export interface InboundEntry {
   id: number;
   date: string;
@@ -17,6 +19,7 @@ export interface InboundEntry {
   net_amt: number;
   paid: number;
   balance: number;
+  attachment: Attachment | null;
 }
 
 export interface OutboundEntry {
@@ -34,6 +37,7 @@ export interface OutboundEntry {
   total_bill: number;
   received: number;
   balance: number;
+  attachment: Attachment | null;
 }
 
 export interface Payment {

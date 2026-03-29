@@ -10,9 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_26_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_29_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "attachments", force: :cascade do |t|
+    t.string "attachable_type", null: false
+    t.bigint "attachable_id", null: false
+    t.string "drive_file_id", null: false
+    t.string "file_name", null: false
+    t.string "file_type", null: false
+    t.integer "file_size", null: false
+    t.string "drive_url"
+    t.bigint "uploaded_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["attachable_type", "attachable_id"], name: "index_attachments_on_attachable"
+    t.index ["drive_file_id"], name: "index_attachments_on_drive_file_id", unique: true
+  end
 
   create_table "credit_transactions", force: :cascade do |t|
     t.date "date", null: false

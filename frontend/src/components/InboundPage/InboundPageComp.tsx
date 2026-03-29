@@ -1,13 +1,16 @@
-import { useState, useMemo } from 'react';
-import { TextField } from '@mui/material';
+import { useState, useMemo, useRef } from 'react';
+import { TextField, Chip } from '@mui/material';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import type { GridColDef } from '@mui/x-data-grid';
 import DataTable from '../common/DataTable.tsx';
 import FormDialog from '../common/FormDialog.tsx';
 import { FormField, FormDateField, FormAutocomplete, FormSelectField } from '../common/FormField.tsx';
 import { useCrud } from '../../hooks/useCrud.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
-import { inboundEntriesApi } from '../../api/resources.ts';
+import { inboundEntriesApi, uploadAttachment } from '../../api/resources.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import FileAttachment from '../common/FileAttachment.tsx';
+import BillButton from '../common/BillButton.tsx';
 import ExportButton from '../common/ExportButton.tsx';
 import FilterBar from '../common/FilterBar.tsx';
 import type { FilterFieldConfig } from '../common/FilterBar.tsx';
@@ -19,6 +22,8 @@ const InboundPageComp = () => {
   const { parties, products, units, partyMap, productMap, unitMap } = useReferenceData();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<InboundEntry | null>(null);
+  const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const stagedFileRef = useRef<File | null>(null);
 
   const partyOptions = useMemo(
     () => parties.filter((p) => p.party_type === 'supplier' || p.party_type === 'both').map((p) => ({ id: p.id, label: p.name })),
@@ -56,6 +61,17 @@ const InboundPageComp = () => {
     { field: 'net_amt', headerName: 'Net Amt', width: 120, renderCell: (p) => formatINR(p.value as number) },
     { field: 'paid', headerName: 'Paid', width: 110, renderCell: (p) => formatINR(p.value as number) },
     { field: 'balance', headerName: 'Balance', width: 110, renderCell: (p) => formatINR(p.value as number) },
+    {
+      field: 'attachment', headerName: 'File', width: 70, sortable: false,
+      renderCell: (p) => {
+        const att = p.row.attachment;
+        return att ? <Chip icon={<AttachFileIcon />} label="" size="small" color="primary" variant="outlined" clickable /> : null;
+      },
+    },
+    {
+      field: 'bill', headerName: 'Bill', width: 60, sortable: false,
+      renderCell: (p) => <BillButton billType="credit_note" recordId={p.row.id} tooltip="Download Credit Note" />,
+    },
   ];
 
   const defaults = useMemo(() => {
@@ -69,12 +85,35 @@ const InboundPageComp = () => {
     return { date: new Date().toISOString().slice(0, 10), qty: 0, rate: 0, moisture_pct: 0, paid: 0, category: '' };
   }, [editing]);
 
+  const handleStagedFile = (file: File | null) => {
+    setStagedFile(file);
+    stagedFileRef.current = file;
+  };
+
   const handleSubmit = (data: Record<string, unknown>) => {
     if (editing) {
       crud.updateMutation.mutate({ id: editing.id, data: data as Partial<InboundEntry> }, { onSuccess: () => setDialogOpen(false) });
     } else {
-      crud.createMutation.mutate(data as Partial<InboundEntry>, { onSuccess: () => setDialogOpen(false) });
+      crud.createMutation.mutate(data as Partial<InboundEntry>, {
+        onSuccess: (result) => {
+          const newRecord = (result as { data: InboundEntry }).data;
+          const file = stagedFileRef.current;
+          if (file && newRecord?.id) {
+            uploadAttachment('inbound_entries', newRecord.id, file).catch(() => {});
+          }
+          setStagedFile(null);
+          stagedFileRef.current = null;
+          setDialogOpen(false);
+        },
+      });
     }
+  };
+
+  const handleOpenDialog = (entry: InboundEntry | null) => {
+    setEditing(entry);
+    setStagedFile(null);
+    stagedFileRef.current = null;
+    setDialogOpen(true);
   };
 
   const tableComp = () => (
@@ -86,12 +125,12 @@ const InboundPageComp = () => {
       totalCount={crud.meta?.total_count ?? 0}
       paginationModel={{ page: (crud.params.page ?? 1) - 1, pageSize: crud.params.per_page ?? 25 }}
       onPaginationChange={(m) => crud.updateParams({ page: m.page + 1, per_page: m.pageSize })}
-      onAdd={() => { setEditing(null); setDialogOpen(true); }}
-      onEdit={(row) => { setEditing(row); setDialogOpen(true); }}
+      onAdd={() => handleOpenDialog(null)}
+      onEdit={(row) => handleOpenDialog(row)}
       onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
       searchPlaceholder="Search by party name..."
-      mobileHiddenColumns={['id', 'village', 'category', 'qty', 'unit_id', 'rate', 'gross_amt', 'moisture_pct', 'paid']}
+      mobileHiddenColumns={['id', 'village', 'category', 'qty', 'unit_id', 'rate', 'gross_amt', 'moisture_pct', 'paid', 'attachment', 'bill']}
       actions={<ExportButton exportType="inbound_entries" params={crud.params} />}
     />
   );
@@ -125,6 +164,24 @@ const InboundPageComp = () => {
               <TextField label="Net Amount" value={formatINR(editing.net_amt)} disabled fullWidth />
               <TextField label="Balance" value={formatINR(editing.balance)} disabled fullWidth />
             </>
+          )}
+          {editing ? (
+            <FileAttachment
+              attachableType="inbound_entries"
+              recordId={editing.id}
+              attachment={editing.attachment}
+              queryKey="inbound_entries"
+            />
+          ) : (
+            <FileAttachment
+              attachableType="inbound_entries"
+              recordId={0}
+              attachment={null}
+              queryKey="inbound_entries"
+              stageOnly
+              stagedFile={stagedFile}
+              onFileSelect={handleStagedFile}
+            />
           )}
         </FormDialog>
       )}
