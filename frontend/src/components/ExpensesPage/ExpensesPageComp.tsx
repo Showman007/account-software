@@ -63,7 +63,17 @@ const ExpensesPageComp = () => {
 
   const handleSubmit = (data: Record<string, unknown>) => {
     if (editing) {
-      crud.updateMutation.mutate({ id: editing.id, data: data as Partial<Expense> }, { onSuccess: () => setDialogOpen(false) });
+      crud.updateMutation.mutate({ id: editing.id, data: data as Partial<Expense> }, {
+        onSuccess: () => {
+          const file = stagedFileRef.current;
+          if (file && editing.id) {
+            uploadAttachment('expenses', editing.id, file).catch(() => {});
+          }
+          setStagedFile(null);
+          stagedFileRef.current = null;
+          setDialogOpen(false);
+        },
+      });
     } else {
       crud.createMutation.mutate(data as Partial<Expense>, {
         onSuccess: (result) => {
@@ -113,24 +123,14 @@ const ExpensesPageComp = () => {
           <FormField name="amount" label="Amount" type="number" required />
           <FormSelectField name="payment_mode_id" label="Payment Mode" options={modeOptions} required />
           <FormField name="remarks" label="Remarks" multiline rows={2} />
-          {editing ? (
-            <FileAttachment
-              attachableType="expenses"
-              recordId={editing.id}
-              attachment={editing.attachment}
-              queryKey="expenses"
-            />
-          ) : (
-            <FileAttachment
-              attachableType="expenses"
-              recordId={0}
-              attachment={null}
-              queryKey="expenses"
-              stageOnly
-              stagedFile={stagedFile}
-              onFileSelect={handleStagedFile}
-            />
-          )}
+          <FileAttachment
+            attachableType="expenses"
+            recordId={editing?.id ?? 0}
+            attachment={editing?.attachment ?? null}
+            queryKey="expenses"
+            stagedFile={stagedFile}
+            onFileSelect={handleStagedFile}
+          />
         </FormDialog>
       )}
     </>

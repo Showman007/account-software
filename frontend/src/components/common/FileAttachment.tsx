@@ -21,7 +21,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { uploadAttachment, deleteAttachment, downloadAttachment } from '../../api/resources.ts';
+import { deleteAttachment, downloadAttachment } from '../../api/resources.ts';
 import type { AttachableType } from '../../api/resources.ts';
 import type { Attachment } from '../../types/common.ts';
 
@@ -32,7 +32,6 @@ interface FileAttachmentProps {
   queryKey: string;
   onFileSelect?: (file: File | null) => void;
   stagedFile?: File | null;
-  stageOnly?: boolean;
 }
 
 const MAX_SIZE = 1 * 1024 * 1024;
@@ -45,7 +44,6 @@ export default function FileAttachment({
   queryKey,
   onFileSelect,
   stagedFile,
-  stageOnly = false,
 }: FileAttachmentProps) {
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -55,19 +53,6 @@ export default function FileAttachment({
   const queryClient = useQueryClient();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const uploadMutation = useMutation({
-    mutationFn: (file: File) => uploadAttachment(attachableType, recordId, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
-      setError(null);
-    },
-    onError: (err: unknown) => {
-      const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-        || 'Upload failed. Please try again.';
-      setError(message);
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteAttachment(attachableType, recordId),
@@ -96,25 +81,27 @@ export default function FileAttachment({
       return;
     }
 
-    if (stageOnly && onFileSelect) {
-      onFileSelect(file);
-    } else {
-      uploadMutation.mutate(file);
-    }
+    // Always stage — upload happens on save
+    onFileSelect?.(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleDelete = () => {
-    if (stageOnly && onFileSelect) {
-      onFileSelect(null);
+    // If there's a staged file, just clear it
+    if (hasStagedFile) {
+      onFileSelect?.(null);
       return;
     }
-    if (window.confirm('Remove this attachment from Google Drive?')) {
-      deleteMutation.mutate();
+    // If there's an existing attachment on Drive, confirm and delete
+    if (hasAttachment) {
+      if (window.confirm('Remove this attachment from Google Drive?')) {
+        deleteMutation.mutate();
+      }
     }
   };
 
-  const handlePreview = async () => {
+  // Preview existing attachment from Drive
+  const handlePreviewExisting = async () => {
     setPreviewOpen(true);
     setPreviewLoading(true);
     try {
@@ -128,6 +115,14 @@ export default function FileAttachment({
     }
   };
 
+  // Preview staged file locally (no network call)
+  const handlePreviewStaged = () => {
+    if (!stagedFile) return;
+    const url = window.URL.createObjectURL(stagedFile);
+    setBlobUrl(url);
+    setPreviewOpen(true);
+  };
+
   const handleClosePreview = () => {
     setPreviewOpen(false);
     if (blobUrl) {
@@ -137,19 +132,26 @@ export default function FileAttachment({
   };
 
   const handleDownload = () => {
-    if (!blobUrl || !attachment) return;
+    if (!blobUrl) return;
+    const name = stagedFile?.name || attachment?.file_name || 'file';
     const link = document.createElement('a');
     link.href = blobUrl;
-    link.download = attachment.file_name;
+    link.download = name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const isLoading = uploadMutation.isPending || deleteMutation.isPending;
+  const isLoading = deleteMutation.isPending;
   const hasAttachment = attachment !== null;
   const hasStagedFile = stagedFile !== null && stagedFile !== undefined;
-  const isImage = attachment?.file_type.startsWith('image/');
+  const isImageAttachment = attachment?.file_type.startsWith('image/');
+  const isImageStaged = stagedFile?.type.startsWith('image/');
+
+  // Determine what to show in preview
+  const previewIsImage = hasStagedFile ? isImageStaged : isImageAttachment;
+  const previewFileName = hasStagedFile ? stagedFile.name : attachment?.file_name || '';
+  const previewFileSize = hasStagedFile ? stagedFile.size : (attachment?.file_size || 0);
 
   return (
     <Box sx={{ mt: 1 }}>
@@ -163,7 +165,35 @@ export default function FileAttachment({
         </Alert>
       )}
 
-      {hasAttachment && (
+      {/* Staged file (selected but not uploaded yet) */}
+      {hasStagedFile && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: 1, borderColor: 'success.main', borderRadius: 1 }}>
+          <InsertDriveFileIcon color="success" />
+          <Chip
+            label={stagedFile.name}
+            size="small"
+            icon={<VisibilityIcon />}
+            clickable
+            onClick={handlePreviewStaged}
+            color="success"
+            variant="outlined"
+            sx={{ maxWidth: 220 }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            {(stagedFile.size / 1024).toFixed(0)} KB
+          </Typography>
+          <Typography variant="caption" color="success.main" fontWeight="bold">
+            Ready
+          </Typography>
+          <Box sx={{ flex: 1 }} />
+          <IconButton size="small" onClick={handleDelete} color="error">
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      )}
+
+      {/* Existing attachment from Drive (and no staged replacement) */}
+      {hasAttachment && !hasStagedFile && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}>
           <InsertDriveFileIcon color="primary" />
           <Chip
@@ -171,7 +201,7 @@ export default function FileAttachment({
             size="small"
             icon={<VisibilityIcon />}
             clickable
-            onClick={handlePreview}
+            onClick={handlePreviewExisting}
             sx={{ maxWidth: 220 }}
           />
           <Typography variant="caption" color="text.secondary">
@@ -184,22 +214,7 @@ export default function FileAttachment({
         </Box>
       )}
 
-      {!hasAttachment && hasStagedFile && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: 1, borderColor: 'success.main', borderRadius: 1 }}>
-          <InsertDriveFileIcon color="success" />
-          <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-            {stagedFile.name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {(stagedFile.size / 1024).toFixed(0)} KB
-          </Typography>
-          <Box sx={{ flex: 1 }} />
-          <IconButton size="small" onClick={handleDelete} color="error">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      )}
-
+      {/* Upload button — show when no file staged and no existing attachment */}
       {!hasAttachment && !hasStagedFile && (
         <Box>
           <input
@@ -211,74 +226,75 @@ export default function FileAttachment({
           />
           <Button
             variant="outlined"
-            startIcon={uploadMutation.isPending ? <CircularProgress size={18} /> : <CloudUploadIcon />}
+            startIcon={<CloudUploadIcon />}
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
             size="small"
             fullWidth
           >
-            {uploadMutation.isPending ? 'Uploading...' : 'Upload File'}
+            Select File
           </Button>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            PDF, JPG, or PNG (max 1 MB)
+            PDF, JPG, or PNG (max 1 MB) &bull; Uploads on save
           </Typography>
         </Box>
       )}
 
       {/* Preview Dialog */}
-      {hasAttachment && (
-        <Dialog open={previewOpen} onClose={handleClosePreview} maxWidth="md" fullWidth fullScreen={isMobile}>
-          <DialogTitle>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Box>
-                <Typography variant="h6" noWrap sx={{ maxWidth: { xs: '60vw', sm: 400 } }}>
-                  {attachment.file_name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {isImage ? 'Image' : 'PDF'} &bull; {(attachment.file_size / 1024).toFixed(1)} KB
-                </Typography>
-              </Box>
-              <IconButton edge="end" onClick={handleClosePreview}>
-                <CloseIcon />
-              </IconButton>
+      <Dialog open={previewOpen} onClose={handleClosePreview} maxWidth="md" fullWidth fullScreen={isMobile}>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="h6" noWrap sx={{ maxWidth: { xs: '60vw', sm: 400 } }}>
+                {previewFileName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {previewIsImage ? 'Image' : 'PDF'} &bull; {(previewFileSize / 1024).toFixed(1)} KB
+                {hasStagedFile && (
+                  <Typography component="span" variant="caption" color="success.main" fontWeight="bold"> &bull; Not uploaded yet</Typography>
+                )}
+              </Typography>
             </Box>
-          </DialogTitle>
-          <DialogContent dividers sx={{ p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-            {previewLoading ? (
-              <Box sx={{ textAlign: 'center', p: 4 }}>
-                <CircularProgress />
-                <Typography sx={{ mt: 2 }} color="text.secondary">Loading file...</Typography>
-              </Box>
-            ) : blobUrl ? (
-              isImage ? (
-                <Box sx={{ p: 2, textAlign: 'center', width: '100%' }}>
-                  <img
-                    src={blobUrl}
-                    alt={attachment.file_name}
-                    style={{ maxWidth: '100%', maxHeight: isMobile ? '70vh' : 500, objectFit: 'contain' }}
-                  />
-                </Box>
-              ) : (
-                <iframe
+            <IconButton edge="end" onClick={handleClosePreview}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          {previewLoading ? (
+            <Box sx={{ textAlign: 'center', p: 4 }}>
+              <CircularProgress />
+              <Typography sx={{ mt: 2 }} color="text.secondary">Loading file...</Typography>
+            </Box>
+          ) : blobUrl ? (
+            previewIsImage ? (
+              <Box sx={{ p: 2, textAlign: 'center', width: '100%' }}>
+                <img
                   src={blobUrl}
-                  width="100%"
-                  height={isMobile ? '100%' : '500'}
-                  style={{ border: 'none', minHeight: isMobile ? '70vh' : 500 }}
-                  title={attachment.file_name}
+                  alt={previewFileName}
+                  style={{ maxWidth: '100%', maxHeight: isMobile ? '70vh' : 500, objectFit: 'contain' }}
                 />
-              )
+              </Box>
             ) : (
-              <Typography color="text.secondary" sx={{ p: 4 }}>Failed to load file.</Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button startIcon={<DownloadIcon />} onClick={handleDownload} disabled={!blobUrl}>
-              Download
-            </Button>
-            <Button onClick={handleClosePreview}>Close</Button>
-          </DialogActions>
-        </Dialog>
-      )}
+              <iframe
+                src={blobUrl}
+                width="100%"
+                height={isMobile ? '100%' : '500'}
+                style={{ border: 'none', minHeight: isMobile ? '70vh' : 500 }}
+                title={previewFileName}
+              />
+            )
+          ) : (
+            <Typography color="text.secondary" sx={{ p: 4 }}>Failed to load file.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button startIcon={<DownloadIcon />} onClick={handleDownload} disabled={!blobUrl}>
+            Download
+          </Button>
+          <Button onClick={handleClosePreview}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
