@@ -9,4 +9,5 @@ class OutboundEntrySerializer < Blueprinter::Base
   association :party, blueprint: PartySerializer
   association :product, blueprint: ProductSerializer
   association :unit, blueprint: UnitSerializer
+  association :attachment, blueprint: AttachmentSerializer
 end

@@ -35,6 +35,7 @@ import { useAuth } from '../../context/AuthContext.tsx';
 import { useAppColors } from '../../context/ThemeContext.tsx';
 import { useIsMobile } from '../../hooks/useIsMobile.ts';
 import ExportButton from '../common/ExportButton.tsx';
+import BillButton from '../common/BillButton.tsx';
 import FilterBar from '../common/FilterBar.tsx';
 import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import type { Payment } from '../../types/transactions.ts';
@@ -189,6 +190,14 @@ const PaymentsPageComp = () => {
       },
     },
     { field: 'remarks', headerName: 'Remarks', flex: 1 },
+    {
+      field: 'receipt', headerName: 'Receipt', width: 70, sortable: false,
+      renderCell: (p) => {
+        const row = p.row as Payment;
+        if (row.reversed || row.reversed_payment_id) return null;
+        return <BillButton billType="payment_receipt" recordId={row.id} tooltip="Download Receipt" />;
+      },
+    },
   ];
 
   // Admin action column

@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Google Drive Setup Script
+# Run this once to obtain a refresh token for your Google account.
+#
+# Usage:
+#   GOOGLE_CLIENT_ID=xxx GOOGLE_CLIENT_SECRET=yyy ruby bin/google_drive_setup
+
+require "bundler/setup"
+require "json"
+require "net/http"
+require "uri"
+require "socket"
+
+client_id = ENV["GOOGLE_CLIENT_ID"]
+client_secret = ENV["GOOGLE_CLIENT_SECRET"]
+
+unless client_id && client_secret
+  puts "ERROR: Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables first."
+  puts ""
+  puts "Example:"
+  puts "  GOOGLE_CLIENT_ID=your_id GOOGLE_CLIENT_SECRET=your_secret ruby bin/google_drive_setup"
+  exit 1
+end
+
+PORT = 8080
+REDIRECT_URI = "http://localhost:#{PORT}"
+SCOPE = "https://www.googleapis.com/auth/drive.file"
+
+auth_uri = "https://accounts.google.com/o/oauth2/v2/auth?" + URI.encode_www_form(
+  client_id: client_id,
+  redirect_uri: REDIRECT_URI,
+  response_type: "code",
+  scope: SCOPE,
+  access_type: "offline",
+  prompt: "consent"
+)
+
+puts ""
+puts "=" * 60
+puts "  Google Drive Setup"
+puts "=" * 60
+puts ""
+puts "1. Open this URL in your browser:"
+puts ""
+puts "   #{auth_uri}"
+puts ""
+puts "2. Sign in with your Google account and grant access."
+puts "3. You'll be redirected — the script will capture the code automatically."
+puts ""
+puts "Waiting for authorization..."
+puts ""
+
+# Use a simple TCP server instead of WEBrick
+server = TCPServer.new("127.0.0.1", PORT)
+client = server.accept
+request = client.gets
+
+# Extract the authorization code from the GET request
+code = nil
+if request && request.include?("code=")
+  params = request.split(" ")[1] # GET /path?params HTTP/1.1
+  query = URI.parse("http://localhost#{params}").query
+  code = URI.decode_www_form(query).to_h["code"] if query
+end
+
+# Send a nice response to the browser
+html = "<html><body><h2>Authorization successful!</h2><p>You can close this window and return to the terminal.</p></body></html>"
+client.print "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: #{html.bytesize}\r\nConnection: close\r\n\r\n#{html}"
+client.close
+server.close
+
+unless code
+  puts "ERROR: No authorization code received."
+  exit 1
+end
+
+puts "Authorization code received! Exchanging for tokens..."
+
+# Exchange code for tokens
+uri = URI("https://oauth2.googleapis.com/token")
+response = Net::HTTP.post_form(uri, {
+  code: code,
+  client_id: client_id,
+  client_secret: client_secret,
+  redirect_uri: REDIRECT_URI,
+  grant_type: "authorization_code"
+})
+
+tokens = JSON.parse(response.body)
+
+if tokens["error"]
+  puts "ERROR: #{tokens['error_description'] || tokens['error']}"
+  exit 1
+end
+
+refresh_token = tokens["refresh_token"]
+
+puts ""
+puts "=" * 60
+puts "  SUCCESS! Here are your credentials:"
+puts "=" * 60
+puts ""
+puts "Add these to your environment variables (.env or Railway dashboard):"
+puts ""
+puts "  GOOGLE_CLIENT_ID=#{client_id}"
+puts "  GOOGLE_CLIENT_SECRET=#{client_secret}"
+puts "  GOOGLE_REFRESH_TOKEN=#{refresh_token}"
+puts "  GOOGLE_DRIVE_FOLDER_ID=<your_folder_id>"
+puts ""
+puts "To get GOOGLE_DRIVE_FOLDER_ID:"
+puts "  1. Open Google Drive in your browser"
+puts "  2. Create a folder (e.g., 'SMLTC Receipts')"
+puts "  3. Open the folder"
+puts "  4. Copy the ID from the URL: https://drive.google.com/drive/folders/<THIS_IS_THE_ID>"
+puts ""
+puts "=" * 60

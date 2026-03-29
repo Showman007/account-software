@@ -1,5 +1,7 @@
 /** Operations types — Milling, Expenses, Stock */
 
+import type { Attachment } from './common.ts';
+
 export interface MillingBatch {
   id: number;
   date: string;
@@ -25,6 +27,7 @@ export interface Expense {
   amount: number;
   payment_mode_id: number;
   remarks: string;
+  attachment: Attachment | null;
 }
 
 export interface StockItem {

@@ -3,6 +3,7 @@ class Expense < ApplicationRecord
 
   belongs_to :category, class_name: 'ExpenseCategory'
   belongs_to :payment_mode, optional: true
+  has_one :attachment, as: :attachable, dependent: :destroy
 
   validates :date, presence: true
   validates :description, presence: true

@@ -59,6 +59,13 @@ Rails.application.routes.draw do
       get 'party_ledger/:id', to: 'party_ledger#show', as: :party_ledger
       get 'profit_calculator', to: 'profit_calculator#index'
 
+      # Attachments (Google Drive)
+      post ':attachable_type/:attachable_id/attachment', to: 'attachments#create', as: :create_attachment
+      delete ':attachable_type/:attachable_id/attachment', to: 'attachments#destroy', as: :destroy_attachment
+
+      # Bill generation (PDF)
+      get 'bills/:bill_type/:id', to: 'bills#show', as: :bill
+
       # Import/Export
       post 'imports', to: 'imports#create'
       get 'exports/:id', to: 'exports#show', as: :export

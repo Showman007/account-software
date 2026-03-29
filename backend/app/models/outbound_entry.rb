@@ -7,6 +7,7 @@ class OutboundEntry < ApplicationRecord
   belongs_to :unit
 
   has_many :payment_allocations, as: :allocatable, dependent: :destroy
+  has_one :attachment, as: :attachable, dependent: :destroy
 
   validates :date, presence: true
   validates :qty, presence: true, numericality: { greater_than: 0 }
