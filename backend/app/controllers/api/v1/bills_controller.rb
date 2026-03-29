@@ -4,7 +4,8 @@ module Api
       BILL_CONFIG = {
         "customer_invoice" => { model: OutboundEntry, includes: [:party, :product, :unit] },
         "credit_note" => { model: InboundEntry, includes: [:party, :product, :unit] },
-        "payment_receipt" => { model: Payment, includes: [:party, :payment_mode] }
+        "payment_receipt" => { model: Payment, includes: [:party, :payment_mode] },
+        "refund_receipt" => { model: Payment, includes: [:party, :payment_mode, :reversed_payment] }
       }.freeze
 
       def show

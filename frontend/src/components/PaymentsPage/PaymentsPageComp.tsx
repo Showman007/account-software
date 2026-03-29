@@ -194,8 +194,14 @@ const PaymentsPageComp = () => {
       field: 'receipt', headerName: 'Receipt', width: 70, sortable: false,
       renderCell: (p) => {
         const row = p.row as Payment;
-        if (row.reversed || row.reversed_payment_id) return null;
-        return <BillButton billType="payment_receipt" recordId={row.id} tooltip="Download Receipt" />;
+        // Reversal entries (refund rows): show refund receipt
+        if (row.reversed_payment_id) {
+          return <BillButton billType="refund_receipt" recordId={row.id} tooltip="Refund Receipt" />;
+        }
+        // Reversed original payments: no receipt (already cancelled)
+        if (row.reversed) return null;
+        // Active payments: show payment receipt
+        return <BillButton billType="payment_receipt" recordId={row.id} tooltip="Payment Receipt" />;
       },
     },
   ];

@@ -5,7 +5,7 @@ class BillPdfService
   COMPANY_NAME = "SMLTC"
   COMPANY_TAGLINE = "Sri Mahalakshmi Lakshmi Trading Company"
 
-  BILL_TYPES = %w[customer_invoice credit_note payment_receipt].freeze
+  BILL_TYPES = %w[customer_invoice credit_note payment_receipt refund_receipt].freeze
 
   def initialize(bill_type, record)
     raise ArgumentError, "Invalid bill type: #{bill_type}" unless BILL_TYPES.include?(bill_type)
@@ -27,6 +27,8 @@ class BillPdfService
       render_credit_note(pdf)
     when "payment_receipt"
       render_payment_receipt(pdf)
+    when "refund_receipt"
+      render_refund_receipt(pdf)
     end
 
     render_footer(pdf)
@@ -42,6 +44,8 @@ class BillPdfService
       "CreditNote_#{@record.id}_#{date}.pdf"
     when "payment_receipt"
       "Receipt_#{@record.id}_#{date}.pdf"
+    when "refund_receipt"
+      "Refund_#{@record.id}_#{date}.pdf"
     end
   end
 
@@ -56,6 +60,7 @@ class BillPdfService
             when "customer_invoice" then "CUSTOMER INVOICE"
             when "credit_note" then "CREDIT NOTE"
             when "payment_receipt" then "PAYMENT RECEIPT"
+            when "refund_receipt" then "REFUND RECEIPT"
             end
 
     pdf.font_size(14) { pdf.text title, style: :bold, align: :center, color: "333333" }
@@ -244,6 +249,63 @@ class BillPdfService
       pdf.indent(10) do
         pdf.font_size(10) do
           pdf.text "Amount: #{format_inr(payment.amount)}", style: :bold
+        end
+      end
+    end
+  end
+
+  def render_refund_receipt(pdf)
+    payment = @record
+    party = payment.party
+    mode = payment.payment_mode
+    original = payment.reversed_payment
+
+    # Receipt info
+    pdf.font_size(10) do
+      pdf.text_box "Refund No: REF-#{payment.id}", at: [0, pdf.cursor], width: 250
+      pdf.text_box "Date: #{payment.date.strftime('%d-%m-%Y')}", at: [300, pdf.cursor], width: 200, align: :right
+    end
+    pdf.move_down 20
+
+    # For a reversal: if original was payment_to_supplier, the refund is receipt_from_buyer (money coming back)
+    # We show the party the refund is associated with
+    direction_label = original&.payment_to_supplier? ? "Refunded By (Supplier)" : "Refunded To (Buyer)"
+
+    pdf.font_size(11) { pdf.text "#{direction_label}:", style: :bold }
+    pdf.font_size(10) do
+      pdf.text party.name, style: :bold
+      pdf.text party.village_city if party.village_city.present?
+      pdf.text "Phone: #{party.phone}" if party.phone.present?
+    end
+    pdf.move_down 15
+
+    # Refund details table
+    details_data = [
+      ["Detail", "Value"],
+      ["Refund Amount", { content: format_inr(payment.amount), font_style: :bold }],
+      ["Payment Mode", mode&.name || "-"],
+      ["Original Payment", original ? "REC-#{original.id} (#{original.date.strftime('%d-%m-%Y')})" : "-"],
+      ["Original Amount", original ? format_inr(original.amount) : "-"],
+      ["Reference", payment.reference.present? ? payment.reference : "-"],
+      ["Remarks", payment.remarks.present? ? payment.remarks : "-"],
+    ]
+
+    pdf.table(details_data, header: true, width: pdf.bounds.width) do |t|
+      t.row(0).font_style = :bold
+      t.row(0).background_color = "E8E8E8"
+      t.columns(0).width = 150
+      t.cell_style = { size: 10, padding: [6, 8] }
+    end
+
+    pdf.move_down 20
+
+    # Amount box
+    pdf.bounding_box([0, pdf.cursor], width: pdf.bounds.width) do
+      pdf.stroke_rectangle [0, pdf.cursor], pdf.bounds.width, 35
+      pdf.move_down 8
+      pdf.indent(10) do
+        pdf.font_size(10) do
+          pdf.text "Refund Amount: #{format_inr(payment.amount)}", style: :bold
         end
       end
     end

@@ -31,6 +31,7 @@ const BILL_TITLES: Record<BillType, string> = {
   customer_invoice: 'Customer Invoice',
   credit_note: 'Credit Note',
   payment_receipt: 'Payment Receipt',
+  refund_receipt: 'Refund Receipt',
 };
 
 export default function BillButton({ billType, recordId, tooltip = 'View Bill' }: BillButtonProps) {
@@ -42,7 +43,8 @@ export default function BillButton({ billType, recordId, tooltip = 'View Bill' }
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const prefix = billType === 'customer_invoice' ? 'Invoice' :
-                 billType === 'credit_note' ? 'CreditNote' : 'Receipt';
+                 billType === 'credit_note' ? 'CreditNote' :
+                 billType === 'refund_receipt' ? 'Refund' : 'Receipt';
   const fileName = `${prefix}_${recordId}.pdf`;
 
   const fetchPdf = async () => {
