@@ -7,30 +7,35 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { uploadAttachment, deleteAttachment } from '../../api/resources.ts';
+import { uploadAttachment, deleteAttachment, downloadAttachment } from '../../api/resources.ts';
 import type { AttachableType } from '../../api/resources.ts';
 import type { Attachment } from '../../types/common.ts';
-import FilePreviewDialog from './FilePreviewDialog.tsx';
 
 interface FileAttachmentProps {
   attachableType: AttachableType;
   recordId: number;
   attachment: Attachment | null;
   queryKey: string;
-  /** If provided, file is staged locally (for use during create flow) */
   onFileSelect?: (file: File | null) => void;
   stagedFile?: File | null;
-  /** If true, shows only the file input (no upload/delete mutations) */
   stageOnly?: boolean;
 }
 
-const MAX_SIZE = 1 * 1024 * 1024; // 1 MB
+const MAX_SIZE = 1 * 1024 * 1024;
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 export default function FileAttachment({
@@ -44,8 +49,12 @@ export default function FileAttachment({
 }: FileAttachmentProps) {
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadAttachment(attachableType, recordId, file),
@@ -73,20 +82,17 @@ export default function FileAttachment({
     },
   });
 
-  const validateFile = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) return 'Only PDF, JPG, and PNG files are allowed.';
-    if (file.size > MAX_SIZE) return 'File size must be less than 1 MB.';
-    return null;
-  };
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validationError = validateFile(file);
-    if (validationError) {
-      setError(validationError);
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError('Only PDF, JPG, and PNG files are allowed.');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      setError('File size must be less than 1 MB.');
       return;
     }
 
@@ -108,9 +114,42 @@ export default function FileAttachment({
     }
   };
 
+  const handlePreview = async () => {
+    setPreviewOpen(true);
+    setPreviewLoading(true);
+    try {
+      const blob = await downloadAttachment(attachableType, recordId);
+      const url = window.URL.createObjectURL(blob);
+      setBlobUrl(url);
+    } catch {
+      // Error handled
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    if (blobUrl) {
+      window.URL.revokeObjectURL(blobUrl);
+      setBlobUrl(null);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!blobUrl || !attachment) return;
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = attachment.file_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const isLoading = uploadMutation.isPending || deleteMutation.isPending;
   const hasAttachment = attachment !== null;
   const hasStagedFile = stagedFile !== null && stagedFile !== undefined;
+  const isImage = attachment?.file_type.startsWith('image/');
 
   return (
     <Box sx={{ mt: 1 }}>
@@ -124,7 +163,6 @@ export default function FileAttachment({
         </Alert>
       )}
 
-      {/* Show existing uploaded attachment */}
       {hasAttachment && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}>
           <InsertDriveFileIcon color="primary" />
@@ -133,7 +171,7 @@ export default function FileAttachment({
             size="small"
             icon={<VisibilityIcon />}
             clickable
-            onClick={() => setPreviewOpen(true)}
+            onClick={handlePreview}
             sx={{ maxWidth: 220 }}
           />
           <Typography variant="caption" color="text.secondary">
@@ -146,9 +184,8 @@ export default function FileAttachment({
         </Box>
       )}
 
-      {/* Show staged file (during create flow) */}
       {!hasAttachment && hasStagedFile && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: 1, borderColor: 'success.main', borderRadius: 1, bgcolor: 'success.50' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, border: 1, borderColor: 'success.main', borderRadius: 1 }}>
           <InsertDriveFileIcon color="success" />
           <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
             {stagedFile.name}
@@ -163,7 +200,6 @@ export default function FileAttachment({
         </Box>
       )}
 
-      {/* Show upload button when no file */}
       {!hasAttachment && !hasStagedFile && (
         <Box>
           <input
@@ -189,13 +225,59 @@ export default function FileAttachment({
         </Box>
       )}
 
-      {/* Preview dialog */}
+      {/* Preview Dialog */}
       {hasAttachment && (
-        <FilePreviewDialog
-          open={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-          attachment={attachment}
-        />
+        <Dialog open={previewOpen} onClose={handleClosePreview} maxWidth="md" fullWidth fullScreen={isMobile}>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="h6" noWrap sx={{ maxWidth: { xs: '60vw', sm: 400 } }}>
+                  {attachment.file_name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {isImage ? 'Image' : 'PDF'} &bull; {(attachment.file_size / 1024).toFixed(1)} KB
+                </Typography>
+              </Box>
+              <IconButton edge="end" onClick={handleClosePreview}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers sx={{ p: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+            {previewLoading ? (
+              <Box sx={{ textAlign: 'center', p: 4 }}>
+                <CircularProgress />
+                <Typography sx={{ mt: 2 }} color="text.secondary">Loading file...</Typography>
+              </Box>
+            ) : blobUrl ? (
+              isImage ? (
+                <Box sx={{ p: 2, textAlign: 'center', width: '100%' }}>
+                  <img
+                    src={blobUrl}
+                    alt={attachment.file_name}
+                    style={{ maxWidth: '100%', maxHeight: isMobile ? '70vh' : 500, objectFit: 'contain' }}
+                  />
+                </Box>
+              ) : (
+                <iframe
+                  src={blobUrl}
+                  width="100%"
+                  height={isMobile ? '100%' : '500'}
+                  style={{ border: 'none', minHeight: isMobile ? '70vh' : 500 }}
+                  title={attachment.file_name}
+                />
+              )
+            ) : (
+              <Typography color="text.secondary" sx={{ p: 4 }}>Failed to load file.</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button startIcon={<DownloadIcon />} onClick={handleDownload} disabled={!blobUrl}>
+              Download
+            </Button>
+            <Button onClick={handleClosePreview}>Close</Button>
+          </DialogActions>
+        </Dialog>
       )}
     </Box>
   );

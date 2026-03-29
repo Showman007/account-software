@@ -43,6 +43,26 @@ module Api
         render json: { error: e.message }, status: :unprocessable_entity
       end
 
+      def show
+        record = find_record
+        authorize record, :show?
+
+        attachment = record.attachment
+        unless attachment
+          return render json: { error: "No file attached" }, status: :not_found
+        end
+
+        drive = GoogleDriveService.new
+        file_content = drive.download(attachment.drive_file_id)
+
+        send_data file_content,
+                  filename: attachment.file_name,
+                  type: attachment.file_type,
+                  disposition: "inline"
+      rescue GoogleDriveService::DriveError => e
+        render json: { error: e.message }, status: :unprocessable_entity
+      end
+
       def destroy
         record = find_record
         authorize record, :update?

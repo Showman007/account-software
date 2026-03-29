@@ -44,7 +44,7 @@ const ExpensesPageComp = () => {
       field: 'attachment', headerName: 'File', width: 70, sortable: false,
       renderCell: (p) => {
         const att = p.row.attachment;
-        return att ? <AttachmentChip attachment={att} /> : null;
+        return att ? <AttachmentChip attachment={att} attachableType="expenses" recordId={p.row.id} /> : null;
       },
     },
   ];

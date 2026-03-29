@@ -134,6 +134,16 @@ export async function uploadAttachment(
   return response.data;
 }
 
+export async function downloadAttachment(
+  type: AttachableType,
+  id: number
+): Promise<Blob> {
+  const response = await apiClient.get(`/${type}/${id}/attachment`, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
 export async function deleteAttachment(
   type: AttachableType,
   id: number
