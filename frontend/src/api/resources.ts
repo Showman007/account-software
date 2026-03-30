@@ -8,6 +8,7 @@ import type { Partner, CreditTransaction } from '../types/partners.ts';
 import type { JournalEntry, JournalPaginatedResponse, JournalSummary } from '../types/journal.ts';
 import type { DashboardData, MasterLedgerData, PartyLedgerData, ProfitCalculatorData } from '../types/reports.ts';
 import type { ResourceApi, QueryResult, TableInfo } from '../types/api.ts';
+import type { Order, Delivery, OrderCreditNote } from '../types/orders.ts';
 
 export type { ResourceApi, QueryResult, TableInfo };
 
@@ -55,6 +56,65 @@ export const expenseCategoriesApi = createResourceApi<ExpenseCategory>('expense_
 export const paymentModesApi = createResourceApi<PaymentMode>('payment_modes');
 export const usersApi = createResourceApi<User>('users');
 export const journalEntriesApi = createResourceApi<JournalEntry>('journal_entries');
+
+// Orders API
+export const ordersApi = createResourceApi<Order>('orders');
+
+export async function getOrder(id: number): Promise<{ data: Order }> {
+  const response = await apiClient.get(`/orders/${id}`);
+  return response.data;
+}
+
+export async function confirmOrder(id: number): Promise<{ data: Order }> {
+  const response = await apiClient.post(`/orders/${id}/confirm`);
+  return response.data;
+}
+
+export async function cancelOrder(id: number, reason?: string): Promise<{ data: Order }> {
+  const response = await apiClient.post(`/orders/${id}/cancel`, { reason });
+  return response.data;
+}
+
+export async function closeOrder(id: number): Promise<{ data: Order }> {
+  const response = await apiClient.post(`/orders/${id}/close`);
+  return response.data;
+}
+
+export async function duplicateOrder(id: number): Promise<{ data: Order }> {
+  const response = await apiClient.post(`/orders/${id}/duplicate`);
+  return response.data;
+}
+
+// Deliveries API
+export async function getDeliveries(orderId: number, params?: QueryParams): Promise<PaginatedResponse<Delivery>> {
+  const response = await apiClient.get(`/orders/${orderId}/deliveries`, { params });
+  return response.data;
+}
+
+export async function createDelivery(orderId: number, data: Record<string, unknown>): Promise<{ data: Delivery }> {
+  const response = await apiClient.post(`/orders/${orderId}/deliveries`, data);
+  return response.data;
+}
+
+export async function markDeliveryInTransit(orderId: number, deliveryId: number): Promise<{ data: Delivery }> {
+  const response = await apiClient.post(`/orders/${orderId}/deliveries/${deliveryId}/mark_in_transit`);
+  return response.data;
+}
+
+export async function markDeliveryDelivered(orderId: number, deliveryId: number): Promise<{ data: Delivery }> {
+  const response = await apiClient.post(`/orders/${orderId}/deliveries/${deliveryId}/mark_delivered`);
+  return response.data;
+}
+
+// Order Credit Notes API
+export async function createOrderCreditNote(
+  orderId: number,
+  deliveryId: number,
+  data: Record<string, unknown>
+): Promise<{ data: OrderCreditNote }> {
+  const response = await apiClient.post(`/orders/${orderId}/order_credit_notes`, { ...data, delivery_id: deliveryId });
+  return response.data;
+}
 
 export async function fetchJournalEntries(params?: QueryParams): Promise<JournalPaginatedResponse> {
   const response = await apiClient.get('/journal_entries', { params });
@@ -152,7 +212,8 @@ export async function deleteAttachment(
 }
 
 // Bill PDF generation
-export type BillType = 'customer_invoice' | 'credit_note' | 'payment_receipt' | 'refund_receipt';
+export type BillType = 'customer_invoice' | 'credit_note' | 'payment_receipt' | 'refund_receipt'
+  | 'quotation' | 'order_invoice' | 'delivery_challan' | 'order_credit_note';
 
 export function getBillUrl(billType: BillType, id: number): string {
   const base = apiClient.defaults.baseURL || '';

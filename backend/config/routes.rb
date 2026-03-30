@@ -27,6 +27,25 @@ Rails.application.routes.draw do
       resources :partners
       resources :credit_transactions
 
+      # Orders & Deliveries
+      resources :orders do
+        member do
+          post :confirm
+          post :cancel
+          post :close
+          post :duplicate
+        end
+        resources :deliveries, only: [:index, :create] do
+          member do
+            post :mark_in_transit
+            post :mark_delivered
+          end
+        end
+        resources :order_credit_notes, only: [:index, :create]
+      end
+      resources :deliveries, only: [:show]
+      resources :order_credit_notes, only: [:show]
+
       # Stock management
       resources :stock_items do
         collection do
