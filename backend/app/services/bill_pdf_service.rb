@@ -96,13 +96,15 @@ class BillPdfService
 
     # Items table
     items_data = [
-      ["#", "Product", "Category", "Qty", "Unit", "Rate", "Amount"]
+      ["#", "Product", "Category", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount"]
     ]
 
     items_data << [
       "1",
       product.name,
       entry.category || "-",
+      format_bag_type(entry.bag_type),
+      entry.no_of_bags.present? ? format_number(entry.no_of_bags) : "-",
       format_number(entry.qty),
       unit.abbreviation,
       format_inr(entry.rate),
@@ -112,9 +114,9 @@ class BillPdfService
     pdf.table(items_data, header: true, width: pdf.bounds.width) do |t|
       t.row(0).font_style = :bold
       t.row(0).background_color = "E8E8E8"
-      t.columns(0).width = 30
-      t.columns(3..6).align = :right
-      t.cell_style = { size: 10, padding: [6, 8] }
+      t.columns(0).width = 25
+      t.columns(3..8).align = :right
+      t.cell_style = { size: 9, padding: [5, 5] }
     end
 
     pdf.move_down 10
@@ -160,13 +162,15 @@ class BillPdfService
 
     # Items table
     items_data = [
-      ["#", "Product", "Category", "Qty", "Unit", "Rate", "Gross Amt"]
+      ["#", "Product", "Category", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Gross Amt"]
     ]
 
     items_data << [
       "1",
       product.name,
       entry.category || "-",
+      format_bag_type(entry.bag_type),
+      entry.no_of_bags.present? ? format_number(entry.no_of_bags) : "-",
       format_number(entry.qty),
       unit.abbreviation,
       format_inr(entry.rate),
@@ -176,9 +180,9 @@ class BillPdfService
     pdf.table(items_data, header: true, width: pdf.bounds.width) do |t|
       t.row(0).font_style = :bold
       t.row(0).background_color = "E8E8E8"
-      t.columns(0).width = 30
-      t.columns(3..6).align = :right
-      t.cell_style = { size: 10, padding: [6, 8] }
+      t.columns(0).width = 25
+      t.columns(3..8).align = :right
+      t.cell_style = { size: 9, padding: [5, 5] }
     end
 
     pdf.move_down 10
@@ -344,5 +348,11 @@ class BillPdfService
     return "0" unless num
 
     num.to_f == num.to_f.to_i ? num.to_i.to_s : format("%.3f", num)
+  end
+
+  def format_bag_type(bag_type)
+    return "-" if bag_type.blank? || bag_type.to_f.zero?
+
+    "#{bag_type.to_i} kg"
   end
 end

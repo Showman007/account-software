@@ -48,7 +48,7 @@ module Api
 
       def inbound_entry_params
         params.permit(:date, :party_id, :village, :product_id, :category,
-                      :qty, :unit_id, :rate, :moisture_pct, :paid)
+                      :bag_type, :no_of_bags, :qty, :unit_id, :rate, :moisture_pct, :paid)
       end
     end
   end

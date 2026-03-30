@@ -30,6 +30,8 @@ export interface OrderItem {
   order_id: number;
   product_id: number;
   category: string;
+  bag_type: number | null;
+  no_of_bags: number | null;
   qty: number;
   unit_id: number;
   rate: number;
@@ -58,6 +60,8 @@ export interface DeliveryItem {
   delivery_id: number;
   order_item_id: number;
   product_id: number;
+  bag_type: number | null;
+  no_of_bags: number | null;
   qty: number;
   unit_id: number;
   product?: { id: number; name: string };
@@ -129,6 +133,8 @@ export interface Order {
 export interface OrderItemFormData {
   product_id: number | '';
   category: string;
+  bag_type: number | '';
+  no_of_bags: number | '';
   qty: number | '';
   unit_id: number | '';
   rate: number | '';

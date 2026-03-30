@@ -7,7 +7,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useForm, FormProvider, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFormContext, FormProvider, useFieldArray, Controller } from 'react-hook-form';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Autocomplete } from '@mui/material';
 import dayjs from 'dayjs';
@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import { ordersApi } from '../../api/resources.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
 import { formatINR } from '../common/SummaryCard.tsx';
+import { BAG_TYPE_OPTIONS, useBagQtySync } from '../common/BagQuantityFields.tsx';
 import type { Order, OrderFormData } from '../../types/orders.ts';
 
 interface Props {
@@ -26,6 +27,112 @@ interface Props {
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+/** Single order line item row with bag↔qty sync + live amount */
+function OrderLineItem({
+  index,
+  outboundProducts,
+  unitOptions,
+  canRemove,
+  onRemove,
+}: {
+  index: number;
+  outboundProducts: { value: number; label: string }[];
+  unitOptions: { value: number; label: string }[];
+  canRemove: boolean;
+  onRemove: () => void;
+}) {
+  const { register, control } = useFormContext();
+  const prefix = `order_items_attributes.${index}`;
+  const { bagType, amount, onBagTypeChange, onBagsChange, onQtyChange, setLastEdited } = useBagQtySync(prefix);
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <Controller
+        name={`${prefix}.product_id`}
+        control={control}
+        rules={{ required: 'Required' }}
+        render={({ field: f, fieldState }) => (
+          <TextField
+            {...f}
+            select
+            label="Product"
+            sx={{ minWidth: 140, flex: 2 }}
+            error={!!fieldState.error}
+            value={f.value ?? ''}
+          >
+            {outboundProducts.map((p) => (
+              <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>
+            ))}
+          </TextField>
+        )}
+      />
+      <TextField
+        {...register(`${prefix}.bag_type`)}
+        select
+        label="Bag"
+        sx={{ width: 100 }}
+        value={bagType ?? ''}
+        onChange={(e) => onBagTypeChange(e.target.value === '' ? '' : Number(e.target.value))}
+      >
+        {BAG_TYPE_OPTIONS.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+        ))}
+      </TextField>
+      <TextField
+        {...register(`${prefix}.no_of_bags`, { valueAsNumber: true })}
+        label="Bags"
+        type="number"
+        sx={{ width: 80 }}
+        slotProps={{ htmlInput: { step: 'any', min: 0 } }}
+        onFocus={() => setLastEdited('bags')}
+        onChange={(e) => onBagsChange(e.target.value === '' ? '' : Number(e.target.value))}
+      />
+      <TextField
+        {...register(`${prefix}.qty`, { required: true, valueAsNumber: true })}
+        label="Qty"
+        type="number"
+        sx={{ width: 90 }}
+        slotProps={{ htmlInput: { step: 'any', min: 0 } }}
+        onFocus={() => setLastEdited('qty')}
+        onChange={(e) => onQtyChange(e.target.value === '' ? '' : Number(e.target.value))}
+      />
+      <Controller
+        name={`${prefix}.unit_id`}
+        control={control}
+        rules={{ required: 'Required' }}
+        render={({ field: f }) => (
+          <TextField {...f} select label="Unit" sx={{ width: 120 }} value={f.value ?? ''}>
+            {unitOptions.map((u) => (
+              <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
+            ))}
+          </TextField>
+        )}
+      />
+      <TextField
+        {...register(`${prefix}.rate`, { required: true, valueAsNumber: true })}
+        label="Rate"
+        type="number"
+        sx={{ width: 100 }}
+        slotProps={{ htmlInput: { step: 'any' } }}
+      />
+      <TextField
+        label="Amount"
+        value={formatINR(amount)}
+        disabled
+        sx={{ width: 120 }}
+      />
+      <IconButton
+        color="error"
+        onClick={onRemove}
+        disabled={!canRemove}
+        sx={{ mt: 0.5 }}
+      >
+        <DeleteIcon />
+      </IconButton>
+    </Box>
+  );
+}
 
 export default function OrderFormDialog({ open, onClose, editing, onSuccess }: Props) {
   const theme = useTheme();
@@ -59,6 +166,8 @@ export default function OrderFormDialog({ open, onClose, editing, onSuccess }: P
         order_items_attributes: editing.order_items.map((item) => ({
           product_id: item.product_id,
           category: item.category || '',
+          bag_type: item.bag_type ?? '',
+          no_of_bags: item.no_of_bags ?? '',
           qty: item.qty,
           unit_id: item.unit_id,
           rate: item.rate,
@@ -72,7 +181,7 @@ export default function OrderFormDialog({ open, onClose, editing, onSuccess }: P
       discount: 0,
       valid_until: '',
       remarks: '',
-      order_items_attributes: [{ product_id: '', category: '', qty: '', unit_id: '', rate: '' }],
+      order_items_attributes: [{ product_id: '', category: '', bag_type: '', no_of_bags: '', qty: '', unit_id: '', rate: '' }],
     };
   }, [editing]);
 
@@ -200,80 +309,22 @@ export default function OrderFormDialog({ open, onClose, editing, onSuccess }: P
               <Button
                 size="small"
                 startIcon={<AddIcon />}
-                onClick={() => append({ product_id: '', category: '', qty: '', unit_id: '', rate: '' })}
+                onClick={() => append({ product_id: '', category: '', bag_type: '', no_of_bags: '', qty: '', unit_id: '', rate: '' })}
               >
                 Add Item
               </Button>
             </Box>
 
-            {fields.map((field, index) => {
-              const qty = Number(watchItems?.[index]?.qty) || 0;
-              const rate = Number(watchItems?.[index]?.rate) || 0;
-              const lineTotal = qty * rate;
-              return (
-                <Box key={field.id} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                  <Controller
-                    name={`order_items_attributes.${index}.product_id`}
-                    control={methods.control}
-                    rules={{ required: 'Required' }}
-                    render={({ field: f, fieldState }) => (
-                      <TextField
-                        {...f}
-                        select
-                        label="Product"
-                        sx={{ minWidth: 150, flex: 2 }}
-                        error={!!fieldState.error}
-                        value={f.value ?? ''}
-                      >
-                        {outboundProducts.map((p) => (
-                          <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  />
-                  <TextField
-                    {...methods.register(`order_items_attributes.${index}.qty`, { required: true, valueAsNumber: true })}
-                    label="Qty"
-                    type="number"
-                    sx={{ width: 90 }}
-                    slotProps={{ htmlInput: { step: 'any' } }}
-                  />
-                  <Controller
-                    name={`order_items_attributes.${index}.unit_id`}
-                    control={methods.control}
-                    rules={{ required: 'Required' }}
-                    render={({ field: f }) => (
-                      <TextField {...f} select label="Unit" sx={{ width: 120 }} value={f.value ?? ''}>
-                        {unitOptions.map((u) => (
-                          <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  />
-                  <TextField
-                    {...methods.register(`order_items_attributes.${index}.rate`, { required: true, valueAsNumber: true })}
-                    label="Rate"
-                    type="number"
-                    sx={{ width: 100 }}
-                    slotProps={{ htmlInput: { step: 'any' } }}
-                  />
-                  <TextField
-                    label="Amount"
-                    value={formatINR(lineTotal)}
-                    disabled
-                    sx={{ width: 120 }}
-                  />
-                  <IconButton
-                    color="error"
-                    onClick={() => fields.length > 1 && remove(index)}
-                    disabled={fields.length <= 1}
-                    sx={{ mt: 0.5 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              );
-            })}
+            {fields.map((field, index) => (
+              <OrderLineItem
+                key={field.id}
+                index={index}
+                outboundProducts={outboundProducts}
+                unitOptions={unitOptions}
+                canRemove={fields.length > 1}
+                onRemove={() => remove(index)}
+              />
+            ))}
 
             <Divider sx={{ my: 1 }} />
 

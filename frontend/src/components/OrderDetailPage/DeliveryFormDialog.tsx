@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, CircularProgress,
-  IconButton, Box, TextField, Typography, Divider, Checkbox, FormControlLabel,
+  IconButton, Box, TextField, Typography, Divider, Checkbox, FormControlLabel, MenuItem,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   useTheme, useMediaQuery,
 } from '@mui/material';
@@ -13,6 +13,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { createDelivery } from '../../api/resources.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
+import { BAG_TYPE_OPTIONS } from '../common/BagQuantityFields.tsx';
 import type { Order, OrderItem } from '../../types/orders.ts';
 
 interface Props {
@@ -29,6 +30,8 @@ interface DeliveryItemRow {
   unit_id: number;
   unit_abbr: string;
   available: number;
+  bag_type: number | '';
+  no_of_bags: number | '';
   qty: number;
   selected: boolean;
 }
@@ -48,6 +51,8 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
         unit_id: item.unit_id,
         unit_abbr: item.unit?.abbreviation || unitMap.get(item.unit_id)?.abbreviation || '',
         available: item.pending_qty,
+        bag_type: item.bag_type ?? '',
+        no_of_bags: item.pending_qty && item.bag_type ? Number(((item.pending_qty * 100) / item.bag_type).toFixed(2)) : '',
         qty: item.pending_qty,
         selected: true,
       }));
@@ -76,7 +81,31 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
   };
 
   const updateQty = (index: number, qty: number) => {
-    setItems((prev) => prev.map((item, i) => i === index ? { ...item, qty: Math.min(qty, item.available) } : item));
+    setItems((prev) => prev.map((item, i) => {
+      if (i !== index) return item;
+      const clampedQty = Math.min(qty, item.available);
+      const bt = Number(item.bag_type);
+      const bags = bt > 0 ? Number(((clampedQty * 100) / bt).toFixed(2)) : item.no_of_bags;
+      return { ...item, qty: clampedQty, no_of_bags: bags };
+    }));
+  };
+
+  const updateBags = (index: number, bags: number) => {
+    setItems((prev) => prev.map((item, i) => {
+      if (i !== index) return item;
+      const bt = Number(item.bag_type);
+      const qty = bt > 0 ? Math.min(Number(((bags * bt) / 100).toFixed(3)), item.available) : item.qty;
+      return { ...item, no_of_bags: bags, qty };
+    }));
+  };
+
+  const updateBagType = (index: number, bagType: number | '') => {
+    setItems((prev) => prev.map((item, i) => {
+      if (i !== index) return item;
+      const bt = Number(bagType);
+      const bags = bt > 0 && item.qty > 0 ? Number(((item.qty * 100) / bt).toFixed(2)) : '';
+      return { ...item, bag_type: bagType, no_of_bags: bags };
+    }));
   };
 
   const onSubmit = handleSubmit((formData) => {
@@ -91,6 +120,8 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
       delivery_items_attributes: selectedItems.map((item) => ({
         order_item_id: item.order_item_id,
         product_id: item.product_id,
+        bag_type: item.bag_type || null,
+        no_of_bags: item.no_of_bags || null,
         qty: item.qty,
         unit_id: item.unit_id,
       })),
@@ -137,6 +168,8 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
                   <TableCell>Product</TableCell>
                   <TableCell>Unit</TableCell>
                   <TableCell align="right">Available</TableCell>
+                  <TableCell align="center">Bag Type</TableCell>
+                  <TableCell align="right">Bags</TableCell>
                   <TableCell align="right">Deliver Qty</TableCell>
                 </TableRow>
               </TableHead>
@@ -149,6 +182,31 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
                     <TableCell>{item.product_name}</TableCell>
                     <TableCell>{item.unit_abbr}</TableCell>
                     <TableCell align="right">{item.available}</TableCell>
+                    <TableCell align="center">
+                      <TextField
+                        select
+                        size="small"
+                        value={item.bag_type}
+                        onChange={(e) => updateBagType(index, e.target.value === '' ? '' : Number(e.target.value))}
+                        disabled={!item.selected}
+                        sx={{ width: 100 }}
+                      >
+                        {BAG_TYPE_OPTIONS.map((opt) => (
+                          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                        ))}
+                      </TextField>
+                    </TableCell>
+                    <TableCell align="right">
+                      <TextField
+                        type="number"
+                        size="small"
+                        value={item.no_of_bags}
+                        onChange={(e) => updateBags(index, Number(e.target.value))}
+                        disabled={!item.selected || !item.bag_type}
+                        sx={{ width: 80 }}
+                        slotProps={{ htmlInput: { step: 'any', min: 0 } }}
+                      />
+                    </TableCell>
                     <TableCell align="right">
                       <TextField
                         type="number"

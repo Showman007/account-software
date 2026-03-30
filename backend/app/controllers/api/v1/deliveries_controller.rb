@@ -45,7 +45,7 @@ module Api
       def delivery_params
         params.permit(
           :date, :transport, :vehicle_no, :driver_name, :remarks,
-          delivery_items_attributes: [:id, :order_item_id, :product_id, :qty, :unit_id, :_destroy]
+          delivery_items_attributes: [:id, :order_item_id, :product_id, :bag_type, :no_of_bags, :qty, :unit_id, :_destroy]
         )
       end
     end

@@ -1,4 +1,6 @@
 class OrderItem < ApplicationRecord
+  include BagCalculable
+
   belongs_to :order
   belongs_to :product
   belongs_to :unit

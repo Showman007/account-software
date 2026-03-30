@@ -1,6 +1,7 @@
 class InboundEntry < ApplicationRecord
   include Journalable
   include AutoPayment
+  include BagCalculable
 
   belongs_to :party
   belongs_to :product

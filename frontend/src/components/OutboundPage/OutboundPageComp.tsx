@@ -15,6 +15,7 @@ import ExportButton from '../common/ExportButton.tsx';
 import FilterBar from '../common/FilterBar.tsx';
 import type { FilterFieldConfig } from '../common/FilterBar.tsx';
 import { CATEGORY_OPTIONS, ProductCategorySync } from '../../utils/categoryUtils.tsx';
+import BagQuantityFields from '../common/BagQuantityFields.tsx';
 import type { OutboundEntry } from '../../types/transactions.ts';
 
 const OutboundPageComp = () => {
@@ -53,6 +54,8 @@ const OutboundPageComp = () => {
     { field: 'city', headerName: 'City', width: 120 },
     { field: 'product_id', headerName: 'Product', width: 120, renderCell: (p) => productMap.get(p.value as number)?.name ?? p.value },
     { field: 'category', headerName: 'Category', width: 100 },
+    { field: 'bag_type', headerName: 'Bag Type', width: 90, renderCell: (p) => p.value ? `${p.value} kg` : '-' },
+    { field: 'no_of_bags', headerName: 'Bags', width: 80, renderCell: (p) => p.value ?? '-' },
     { field: 'qty', headerName: 'Qty', width: 80 },
     { field: 'unit_id', headerName: 'Unit', width: 80, renderCell: (p) => unitMap.get(p.value as number)?.abbreviation ?? p.value },
     { field: 'rate', headerName: 'Rate', width: 100, renderCell: (p) => formatINR(p.value as number) },
@@ -78,11 +81,12 @@ const OutboundPageComp = () => {
     if (editing) {
       return {
         date: editing.date, party_id: editing.party_id, city: editing.city,
-        product_id: editing.product_id, category: editing.category || '', qty: editing.qty,
+        product_id: editing.product_id, category: editing.category || '',
+        bag_type: editing.bag_type ?? '', no_of_bags: editing.no_of_bags ?? '', qty: editing.qty,
         unit_id: editing.unit_id, rate: editing.rate, transport: editing.transport, received: editing.received,
       };
     }
-    return { date: new Date().toISOString().slice(0, 10), qty: 0, rate: 0, transport: 0, received: 0, category: '' };
+    return { date: new Date().toISOString().slice(0, 10), bag_type: '', no_of_bags: '', qty: 0, rate: 0, transport: 0, received: 0, category: '' };
   }, [editing]);
 
   const handleStagedFile = (file: File | null) => {
@@ -140,7 +144,7 @@ const OutboundPageComp = () => {
       onDelete={(row) => { if (window.confirm('Delete this entry?')) crud.deleteMutation.mutate(row.id); }}
       onSearchChange={(q) => crud.updateParams({ q, page: 1 })}
       searchPlaceholder="Search by party name..."
-      mobileHiddenColumns={['id', 'city', 'category', 'qty', 'unit_id', 'rate', 'amount', 'transport', 'received']}
+      mobileHiddenColumns={['id', 'city', 'category', 'bag_type', 'no_of_bags', 'qty', 'unit_id', 'rate', 'amount', 'transport', 'received']}
       actions={<ExportButton exportType="outbound_entries" params={crud.params} />}
     />
   );
@@ -162,9 +166,9 @@ const OutboundPageComp = () => {
           <FormField name="city" label="City" />
           <FormSelectField name="product_id" label="Product" options={outboundProducts} required />
           <FormSelectField name="category" label="Category" options={CATEGORY_OPTIONS} />
-          <FormField name="qty" label="Quantity" type="number" required />
           <FormSelectField name="unit_id" label="Unit" options={unitOptions} required />
           <FormField name="rate" label="Rate" type="number" required />
+          <BagQuantityFields showAmount amountLabel="Amount" />
           <FormField name="transport" label="Transport" type="number" />
           <FormField name="received" label="Received" type="number" />
           {editing && (
