@@ -1,4 +1,6 @@
 class DeliveryItem < ApplicationRecord
+  include BagCalculable
+
   belongs_to :delivery
   belongs_to :order_item
   belongs_to :product

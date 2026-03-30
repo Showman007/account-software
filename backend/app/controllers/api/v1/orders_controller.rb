@@ -80,7 +80,7 @@ module Api
       def order_params
         params.permit(
           :date, :party_id, :city, :discount, :valid_until, :remarks,
-          order_items_attributes: [:id, :product_id, :category, :qty, :unit_id, :rate, :_destroy]
+          order_items_attributes: [:id, :product_id, :category, :bag_type, :no_of_bags, :qty, :unit_id, :rate, :_destroy]
         )
       end
     end

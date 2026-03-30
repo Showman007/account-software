@@ -133,13 +133,15 @@ class OrderPdfService
 
     # Items table with delivery tracking
     items_data = [
-      ["#", "Product", "Qty", "Unit", "Rate", "Amount", "Delivered", "Pending"]
+      ["#", "Product", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount", "Delivered", "Pending"]
     ]
 
     order.order_items.includes(:product, :unit).each_with_index do |item, idx|
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        format_bag_type(item.bag_type),
+        item.no_of_bags.present? ? format_number(item.no_of_bags) : "-",
         format_number(item.qty),
         item.unit.abbreviation,
         format_inr(item.rate),
@@ -153,8 +155,8 @@ class OrderPdfService
       t.row(0).font_style = :bold
       t.row(0).background_color = "E8E8E8"
       t.columns(0).width = 25
-      t.columns(2..7).align = :right
-      t.cell_style = { size: 9, padding: [5, 6] }
+      t.columns(2..9).align = :right
+      t.cell_style = { size: 8, padding: [4, 4] }
     end
 
     pdf.move_down 10
@@ -170,7 +172,10 @@ class OrderPdfService
 
       delivery_data = [["#", "Delivery No", "Date", "Status", "Transport", "Items"]]
       order.deliveries.includes(delivery_items: :product).each_with_index do |d, idx|
-        item_names = d.delivery_items.map { |di| "#{di.product.name} (#{format_number(di.qty)})" }.join(", ")
+        item_names = d.delivery_items.map { |di|
+          bag_info = di.bag_type.present? && di.no_of_bags.present? ? "#{format_number(di.no_of_bags)} x #{di.bag_type.to_i}kg = " : ""
+          "#{di.product.name} (#{bag_info}#{format_number(di.qty)})"
+        }.join(", ")
         delivery_data << [
           (idx + 1).to_s,
           d.delivery_number,
@@ -224,12 +229,14 @@ class OrderPdfService
     end
 
     # Items table
-    items_data = [["#", "Product", "Qty", "Unit"]]
+    items_data = [["#", "Product", "Bag Type", "Bags", "Qty", "Unit"]]
 
     delivery.delivery_items.includes(:product, :unit).each_with_index do |item, idx|
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        format_bag_type(item.bag_type),
+        item.no_of_bags.present? ? format_number(item.no_of_bags) : "-",
         format_number(item.qty),
         item.unit.abbreviation
       ]
@@ -239,7 +246,7 @@ class OrderPdfService
       t.row(0).font_style = :bold
       t.row(0).background_color = "E8E8E8"
       t.columns(0).width = 30
-      t.columns(2).align = :right
+      t.columns(2..4).align = :right
       t.cell_style = { size: 10, padding: [6, 8] }
     end
 
@@ -297,12 +304,15 @@ class OrderPdfService
     end
 
     # Items table
-    items_data = [["#", "Product", "Qty", "Unit", "Rate", "Amount"]]
+    items_data = [["#", "Product", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount"]]
 
-    credit_note.credit_note_items.includes(:product, :unit).each_with_index do |item, idx|
+    credit_note.credit_note_items.includes(:product, :unit, :delivery_item).each_with_index do |item, idx|
+      di = item.delivery_item
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        di&.bag_type.present? ? format_bag_type(di.bag_type) : "-",
+        di&.no_of_bags.present? ? format_number((item.qty * 100 / di.bag_type).round(2)) : "-",
         format_number(item.qty),
         item.unit.abbreviation,
         format_inr(item.rate),
@@ -313,10 +323,9 @@ class OrderPdfService
     pdf.table(items_data, header: true, width: pdf.bounds.width) do |t|
       t.row(0).font_style = :bold
       t.row(0).background_color = "E8E8E8"
-      t.columns(0).width = 30
-      t.columns(2).align = :right
-      t.columns(4..5).align = :right
-      t.cell_style = { size: 10, padding: [6, 8] }
+      t.columns(0).width = 25
+      t.columns(2..7).align = :right
+      t.cell_style = { size: 9, padding: [5, 6] }
     end
 
     pdf.move_down 10
@@ -351,12 +360,14 @@ class OrderPdfService
   end
 
   def render_order_items_table(pdf, order)
-    items_data = [["#", "Product", "Qty", "Unit", "Rate", "Amount"]]
+    items_data = [["#", "Product", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount"]]
 
     order.order_items.includes(:product, :unit).each_with_index do |item, idx|
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        format_bag_type(item.bag_type),
+        item.no_of_bags.present? ? format_number(item.no_of_bags) : "-",
         format_number(item.qty),
         item.unit.abbreviation,
         format_inr(item.rate),
@@ -367,10 +378,9 @@ class OrderPdfService
     pdf.table(items_data, header: true, width: pdf.bounds.width) do |t|
       t.row(0).font_style = :bold
       t.row(0).background_color = "E8E8E8"
-      t.columns(0).width = 30
-      t.columns(2).align = :right
-      t.columns(4..5).align = :right
-      t.cell_style = { size: 10, padding: [6, 8] }
+      t.columns(0).width = 25
+      t.columns(2..7).align = :right
+      t.cell_style = { size: 9, padding: [5, 6] }
     end
   end
 
@@ -420,5 +430,11 @@ class OrderPdfService
   def format_number(num)
     return "0" unless num
     num.to_f == num.to_f.to_i ? num.to_i.to_s : format("%.3f", num)
+  end
+
+  def format_bag_type(bag_type)
+    return "-" if bag_type.blank? || bag_type.to_f.zero?
+
+    "#{bag_type.to_i} kg"
   end
 end

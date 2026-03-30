@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_30_100007) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_30_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,6 +88,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_100007) do
     t.bigint "unit_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "bag_type", precision: 5, scale: 1
+    t.decimal "no_of_bags", precision: 10, scale: 2
     t.index ["delivery_id"], name: "index_delivery_items_on_delivery_id"
     t.index ["order_item_id"], name: "index_delivery_items_on_order_item_id"
     t.index ["product_id"], name: "index_delivery_items_on_product_id"
@@ -134,6 +136,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_100007) do
     t.decimal "balance", precision: 15, scale: 2, default: "0.0"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "bag_type", precision: 5, scale: 1
+    t.decimal "no_of_bags", precision: 10, scale: 2
     t.index ["date"], name: "index_inbound_entries_on_date"
     t.index ["party_id"], name: "index_inbound_entries_on_party_id"
     t.index ["product_id"], name: "index_inbound_entries_on_product_id"
@@ -236,6 +240,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_100007) do
     t.decimal "pending_qty", precision: 12, scale: 3, default: "0.0"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "bag_type", precision: 5, scale: 1
+    t.decimal "no_of_bags", precision: 10, scale: 2
     t.index ["order_id", "product_id"], name: "index_order_items_on_order_id_and_product_id"
     t.index ["order_id"], name: "index_order_items_on_order_id"
     t.index ["product_id"], name: "index_order_items_on_product_id"
@@ -282,6 +288,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_100007) do
     t.datetime "updated_at", null: false
     t.bigint "order_id"
     t.bigint "delivery_item_id"
+    t.decimal "bag_type", precision: 5, scale: 1
+    t.decimal "no_of_bags", precision: 10, scale: 2
     t.index ["date"], name: "index_outbound_entries_on_date"
     t.index ["delivery_item_id"], name: "index_outbound_entries_on_delivery_item_id"
     t.index ["order_id"], name: "index_outbound_entries_on_order_id"

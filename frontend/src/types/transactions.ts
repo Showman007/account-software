@@ -9,6 +9,8 @@ export interface InboundEntry {
   village: string;
   product_id: number;
   category: string;
+  bag_type: number | null;
+  no_of_bags: number | null;
   qty: number;
   unit_id: number;
   rate: number;
@@ -29,6 +31,8 @@ export interface OutboundEntry {
   city: string;
   product_id: number;
   category: string;
+  bag_type: number | null;
+  no_of_bags: number | null;
   qty: number;
   unit_id: number;
   rate: number;
