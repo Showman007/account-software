@@ -42,6 +42,7 @@ import ImportExportIcon from '@mui/icons-material/ImportExport';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import TerminalIcon from '@mui/icons-material/Terminal';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { useAuth } from '../../context/AuthContext.tsx';
@@ -70,6 +71,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Inbound', path: '/inbound', icon: <ArrowDownwardIcon /> },
       { label: 'Outbound', path: '/outbound', icon: <ArrowUpwardIcon /> },
+      { label: 'Orders', path: '/orders', icon: <ShoppingCartIcon /> },
       { label: 'Payments', path: '/payments', icon: <PaymentIcon /> },
     ],
   },

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_30_100007) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,6 +29,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
     t.index ["drive_file_id"], name: "index_attachments_on_drive_file_id", unique: true
   end
 
+  create_table "credit_note_items", force: :cascade do |t|
+    t.bigint "order_credit_note_id", null: false
+    t.bigint "delivery_item_id", null: false
+    t.bigint "product_id", null: false
+    t.decimal "qty", precision: 12, scale: 3, null: false
+    t.bigint "unit_id", null: false
+    t.decimal "rate", precision: 12, scale: 2, null: false
+    t.decimal "amount", precision: 15, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["delivery_item_id"], name: "index_credit_note_items_on_delivery_item_id"
+    t.index ["order_credit_note_id"], name: "index_credit_note_items_on_order_credit_note_id"
+    t.index ["product_id"], name: "index_credit_note_items_on_product_id"
+    t.index ["unit_id"], name: "index_credit_note_items_on_unit_id"
+  end
+
   create_table "credit_transactions", force: :cascade do |t|
     t.date "date", null: false
     t.bigint "partner_id", null: false
@@ -45,6 +61,37 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
     t.index ["date"], name: "index_credit_transactions_on_date"
     t.index ["partner_id"], name: "index_credit_transactions_on_partner_id"
     t.index ["payment_mode_id"], name: "index_credit_transactions_on_payment_mode_id"
+  end
+
+  create_table "deliveries", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.string "delivery_number", null: false
+    t.date "date", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "transport", precision: 12, scale: 2, default: "0.0"
+    t.string "vehicle_no"
+    t.string "driver_name"
+    t.text "remarks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_deliveries_on_date"
+    t.index ["delivery_number"], name: "index_deliveries_on_delivery_number", unique: true
+    t.index ["order_id"], name: "index_deliveries_on_order_id"
+    t.index ["status"], name: "index_deliveries_on_status"
+  end
+
+  create_table "delivery_items", force: :cascade do |t|
+    t.bigint "delivery_id", null: false
+    t.bigint "order_item_id", null: false
+    t.bigint "product_id", null: false
+    t.decimal "qty", precision: 12, scale: 3, null: false
+    t.bigint "unit_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["delivery_id"], name: "index_delivery_items_on_delivery_id"
+    t.index ["order_item_id"], name: "index_delivery_items_on_order_item_id"
+    t.index ["product_id"], name: "index_delivery_items_on_product_id"
+    t.index ["unit_id"], name: "index_delivery_items_on_unit_id"
   end
 
   create_table "expense_categories", force: :cascade do |t|
@@ -145,6 +192,78 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
     t.index ["date"], name: "index_milling_batches_on_date"
   end
 
+  create_table "order_credit_notes", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.bigint "delivery_id", null: false
+    t.string "credit_note_number", null: false
+    t.date "date", null: false
+    t.string "reason"
+    t.decimal "total_amount", precision: 15, scale: 2, default: "0.0"
+    t.text "remarks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["credit_note_number"], name: "index_order_credit_notes_on_credit_note_number", unique: true
+    t.index ["date"], name: "index_order_credit_notes_on_date"
+    t.index ["delivery_id"], name: "index_order_credit_notes_on_delivery_id"
+    t.index ["order_id"], name: "index_order_credit_notes_on_order_id"
+  end
+
+  create_table "order_events", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.integer "event_type", null: false
+    t.date "date", null: false
+    t.string "status_from"
+    t.string "status_to"
+    t.text "remarks"
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_order_events_on_created_by_id"
+    t.index ["date"], name: "index_order_events_on_date"
+    t.index ["order_id"], name: "index_order_events_on_order_id"
+  end
+
+  create_table "order_items", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.bigint "product_id", null: false
+    t.string "category"
+    t.decimal "qty", precision: 12, scale: 3, null: false
+    t.bigint "unit_id", null: false
+    t.decimal "rate", precision: 12, scale: 2, null: false
+    t.decimal "amount", precision: 15, scale: 2, default: "0.0", null: false
+    t.decimal "delivered_qty", precision: 12, scale: 3, default: "0.0"
+    t.decimal "returned_qty", precision: 12, scale: 3, default: "0.0"
+    t.decimal "pending_qty", precision: 12, scale: 3, default: "0.0"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id", "product_id"], name: "index_order_items_on_order_id_and_product_id"
+    t.index ["order_id"], name: "index_order_items_on_order_id"
+    t.index ["product_id"], name: "index_order_items_on_product_id"
+    t.index ["unit_id"], name: "index_order_items_on_unit_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.string "order_number", null: false
+    t.date "date", null: false
+    t.bigint "party_id", null: false
+    t.string "city"
+    t.integer "status", default: 0, null: false
+    t.decimal "subtotal", precision: 15, scale: 2, default: "0.0"
+    t.decimal "discount", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_amount", precision: 15, scale: 2, default: "0.0"
+    t.decimal "received", precision: 15, scale: 2, default: "0.0"
+    t.decimal "balance", precision: 15, scale: 2, default: "0.0"
+    t.date "valid_until"
+    t.string "rejection_reason"
+    t.text "remarks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_orders_on_date"
+    t.index ["order_number"], name: "index_orders_on_order_number", unique: true
+    t.index ["party_id"], name: "index_orders_on_party_id"
+    t.index ["status"], name: "index_orders_on_status"
+  end
+
   create_table "outbound_entries", force: :cascade do |t|
     t.date "date", null: false
     t.bigint "party_id", null: false
@@ -161,7 +280,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
     t.decimal "balance", precision: 15, scale: 2, default: "0.0"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "order_id"
+    t.bigint "delivery_item_id"
     t.index ["date"], name: "index_outbound_entries_on_date"
+    t.index ["delivery_item_id"], name: "index_outbound_entries_on_delivery_item_id"
+    t.index ["order_id"], name: "index_outbound_entries_on_order_id"
     t.index ["party_id"], name: "index_outbound_entries_on_party_id"
     t.index ["product_id"], name: "index_outbound_entries_on_product_id"
     t.index ["unit_id"], name: "index_outbound_entries_on_unit_id"
@@ -286,8 +409,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "credit_note_items", "delivery_items"
+  add_foreign_key "credit_note_items", "order_credit_notes"
+  add_foreign_key "credit_note_items", "products"
+  add_foreign_key "credit_note_items", "units"
   add_foreign_key "credit_transactions", "partners"
   add_foreign_key "credit_transactions", "payment_modes"
+  add_foreign_key "deliveries", "orders"
+  add_foreign_key "delivery_items", "deliveries"
+  add_foreign_key "delivery_items", "order_items"
+  add_foreign_key "delivery_items", "products"
+  add_foreign_key "delivery_items", "units"
   add_foreign_key "expenses", "expense_categories", column: "category_id"
   add_foreign_key "expenses", "payment_modes"
   add_foreign_key "inbound_entries", "parties"
@@ -297,6 +429,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_29_110000) do
   add_foreign_key "journal_lines", "journal_entries"
   add_foreign_key "journal_lines", "parties"
   add_foreign_key "journal_lines", "partners"
+  add_foreign_key "order_credit_notes", "deliveries"
+  add_foreign_key "order_credit_notes", "orders"
+  add_foreign_key "order_events", "orders"
+  add_foreign_key "order_events", "users", column: "created_by_id"
+  add_foreign_key "order_items", "orders"
+  add_foreign_key "order_items", "products"
+  add_foreign_key "order_items", "units"
+  add_foreign_key "orders", "parties"
+  add_foreign_key "outbound_entries", "delivery_items"
+  add_foreign_key "outbound_entries", "orders"
   add_foreign_key "outbound_entries", "parties"
   add_foreign_key "outbound_entries", "products"
   add_foreign_key "outbound_entries", "units"

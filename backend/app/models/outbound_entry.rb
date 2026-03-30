@@ -5,6 +5,8 @@ class OutboundEntry < ApplicationRecord
   belongs_to :party
   belongs_to :product
   belongs_to :unit
+  belongs_to :order, optional: true
+  belongs_to :delivery_item, optional: true
 
   has_many :payment_allocations, as: :allocatable, dependent: :destroy
   has_one :attachment, as: :attachable, dependent: :destroy

@@ -25,6 +25,7 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
   actions?: React.ReactNode;
   mobileHiddenColumns?: string[];
+  onRowClick?: (row: T) => void;
 }
 
 export default function DataTable<T extends { id: number }>({
@@ -43,6 +44,7 @@ export default function DataTable<T extends { id: number }>({
   searchPlaceholder = 'Search...',
   actions,
   mobileHiddenColumns,
+  onRowClick,
 }: DataTableProps<T>) {
   const { isAdmin } = useAuth();
   const [search, setSearch] = useState(searchValue ?? '');
@@ -132,6 +134,7 @@ export default function DataTable<T extends { id: number }>({
         pageSizeOptions={[10, 25, 50]}
         disableRowSelectionOnClick
         autoHeight
+        onRowClick={onRowClick ? (params) => onRowClick(params.row as T) : undefined}
         columnVisibilityModel={columnVisibilityModel}
         sx={{
           backgroundColor: colors.surface,

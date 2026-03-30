@@ -38,6 +38,8 @@ import ImportExportPage from './pages/ImportExportPage.tsx';
 import UsersPage from './pages/UsersPage.tsx';
 import JournalPage from './pages/JournalPage.tsx';
 import QueryRunnerPage from './pages/QueryRunnerPage.tsx';
+import OrdersPage from './pages/OrdersPage.tsx';
+import OrderDetailPage from './pages/OrderDetailPage.tsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
@@ -74,6 +76,8 @@ function ThemedApp() {
                 <Route path="/parties" element={<PartiesPage />} />
                 <Route path="/inbound" element={<InboundPage />} />
                 <Route path="/outbound" element={<OutboundPage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/orders/:id" element={<OrderDetailPage />} />
                 <Route path="/payments" element={<PaymentsPage />} />
                 <Route path="/milling" element={<MillingPage />} />
                 <Route path="/expenses" element={<ExpensesPage />} />

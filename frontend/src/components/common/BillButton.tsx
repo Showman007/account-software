@@ -32,6 +32,10 @@ const BILL_TITLES: Record<BillType, string> = {
   credit_note: 'Credit Note',
   payment_receipt: 'Payment Receipt',
   refund_receipt: 'Refund Receipt',
+  quotation: 'Quotation',
+  order_invoice: 'Order Invoice',
+  delivery_challan: 'Delivery Challan',
+  order_credit_note: 'Order Credit Note',
 };
 
 export default function BillButton({ billType, recordId, tooltip = 'View Bill' }: BillButtonProps) {
