@@ -2,7 +2,7 @@ module Api
   module V1
     class OutboundEntriesController < BaseController
       def index
-        scope = policy_scope(OutboundEntry).includes(:party, :product, :unit, :attachment)
+        scope = policy_scope(OutboundEntry).includes(:party, :product, :unit, :attachment, :order, { delivery_item: :delivery }, { payment_allocations: { payment: :payment_mode } })
         scope = scope.joins(:party).where('parties.name ILIKE ?', "%#{params[:q]}%") if params[:q].present?
         scope = scope.where(party_id: params[:party_id]) if params[:party_id].present?
         scope = scope.where(product_id: params[:product_id]) if params[:product_id].present?

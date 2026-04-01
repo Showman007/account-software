@@ -11,4 +11,5 @@ class InboundEntrySerializer < Blueprinter::Base
   association :product, blueprint: ProductSerializer
   association :unit, blueprint: UnitSerializer
   association :attachment, blueprint: AttachmentSerializer
+  association :payment_allocations, blueprint: PaymentAllocationSerializer
 end

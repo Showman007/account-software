@@ -2,6 +2,15 @@
 
 import type { Attachment } from './common.ts';
 
+export interface PaymentAllocation {
+  id: number;
+  payment_id: number;
+  allocatable_type: string;
+  allocatable_id: number;
+  amount: number;
+  payment?: Payment;
+}
+
 export interface InboundEntry {
   id: number;
   date: string;
@@ -22,6 +31,7 @@ export interface InboundEntry {
   paid: number;
   balance: number;
   attachment: Attachment | null;
+  payment_allocations?: PaymentAllocation[];
 }
 
 export interface OutboundEntry {
@@ -42,6 +52,11 @@ export interface OutboundEntry {
   received: number;
   balance: number;
   attachment: Attachment | null;
+  order_id: number | null;
+  delivery_item_id: number | null;
+  order_number: string | null;
+  delivery_number: string | null;
+  payment_allocations?: PaymentAllocation[];
 }
 
 export interface Payment {
@@ -56,4 +71,5 @@ export interface Payment {
   remarks: string;
   reversed: boolean;
   reversed_payment_id: number | null;
+  payment_mode?: { id: number; name: string };
 }
