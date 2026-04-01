@@ -75,6 +75,7 @@ Rails.application.routes.draw do
 
       # Reports & Analytics
       get 'dashboard', to: 'dashboard#index'
+      get 'orders_dashboard', to: 'orders_dashboard#index'
       get 'master_ledger', to: 'master_ledger#index'
       get 'party_ledger/:id', to: 'party_ledger#show', as: :party_ledger
       get 'profit_calculator', to: 'profit_calculator#index'
