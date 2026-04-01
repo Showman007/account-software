@@ -6,7 +6,7 @@ import type { InboundEntry, OutboundEntry, Payment } from '../types/transactions
 import type { MillingBatch, Expense, StockItem } from '../types/operations.ts';
 import type { Partner, CreditTransaction } from '../types/partners.ts';
 import type { JournalEntry, JournalPaginatedResponse, JournalSummary } from '../types/journal.ts';
-import type { DashboardData, MasterLedgerData, PartyLedgerData, ProfitCalculatorData } from '../types/reports.ts';
+import type { DashboardData, MasterLedgerData, PartyLedgerData, ProfitCalculatorData, OrdersDashboardData } from '../types/reports.ts';
 import type { ResourceApi, QueryResult, TableInfo } from '../types/api.ts';
 import type { Order, Delivery, OrderCreditNote } from '../types/orders.ts';
 
@@ -129,6 +129,14 @@ export async function fetchAllJournalEntries(params?: QueryParams): Promise<{ da
 export async function backfillJournals(): Promise<{ message: string; count: number }> {
   const response = await apiClient.post('/journal_entries/backfill');
   return response.data;
+}
+
+export async function fetchOrdersDashboard(params?: { from_date?: string; to_date?: string }): Promise<OrdersDashboardData> {
+  const query = new URLSearchParams();
+  if (params?.from_date) query.set('from_date', params.from_date);
+  if (params?.to_date) query.set('to_date', params.to_date);
+  const response = await apiClient.get(`/orders_dashboard?${query}`);
+  return response.data.data || response.data;
 }
 
 export async function fetchDashboard(): Promise<DashboardData> {
