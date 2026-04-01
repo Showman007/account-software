@@ -39,6 +39,7 @@ export interface OrderItem {
   delivered_qty: number;
   returned_qty: number;
   pending_qty: number;
+  available_for_delivery_qty: number;
   product?: { id: number; name: string };
   unit?: { id: number; name: string; abbreviation: string };
 }

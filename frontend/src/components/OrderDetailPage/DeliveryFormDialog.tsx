@@ -44,26 +44,29 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
 
   const pendingItems: DeliveryItemRow[] = useMemo(() => {
     return order.order_items
-      .filter((item) => item.pending_qty > 0)
-      .map((item) => ({
-        order_item_id: item.id,
-        product_id: item.product_id,
-        product_name: item.product?.name || productMap.get(item.product_id)?.name || '',
-        unit_id: item.unit_id,
-        unit_abbr: item.unit?.abbreviation || unitMap.get(item.unit_id)?.abbreviation || '',
-        available: item.pending_qty,
-        bag_type: item.bag_type ?? '',
-        no_of_bags: (() => {
-          if (!item.bag_type || !item.pending_qty) return '';
-          const unitName = item.unit?.name || unitMap.get(item.unit_id)?.name;
-          const mode = getConversionMode(unitName);
-          const bags = qtyToBags(item.pending_qty, item.bag_type, mode);
-          return bags ?? '';
-        })(),
-        qty: item.pending_qty,
-        selected: true,
-        bag_type_from_order: item.bag_type != null && item.bag_type > 0,
-      }));
+      .filter((item) => (item.available_for_delivery_qty ?? item.pending_qty) > 0)
+      .map((item) => {
+        const available = item.available_for_delivery_qty ?? item.pending_qty;
+        return {
+          order_item_id: item.id,
+          product_id: item.product_id,
+          product_name: item.product?.name || productMap.get(item.product_id)?.name || '',
+          unit_id: item.unit_id,
+          unit_abbr: item.unit?.abbreviation || unitMap.get(item.unit_id)?.abbreviation || '',
+          available,
+          bag_type: item.bag_type ?? '',
+          no_of_bags: (() => {
+            if (!item.bag_type || !available) return '';
+            const unitName = item.unit?.name || unitMap.get(item.unit_id)?.name;
+            const mode = getConversionMode(unitName);
+            const bags = qtyToBags(available, item.bag_type, mode);
+            return bags ?? '';
+          })(),
+          qty: available,
+          selected: true,
+          bag_type_from_order: item.bag_type != null && item.bag_type > 0,
+        };
+      });
   }, [order, productMap, unitMap]);
 
   const [items, setItems] = useState<DeliveryItemRow[]>(pendingItems);
