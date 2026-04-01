@@ -55,8 +55,8 @@ const InboundPageComp = () => {
     { field: 'product_id', headerName: 'Product', width: 120, renderCell: (p) => productMap.get(p.value as number)?.name ?? p.value },
     { field: 'category', headerName: 'Category', width: 100 },
     { field: 'bag_type', headerName: 'Bag Type', width: 90, renderCell: (p) => p.value ? `${p.value} kg` : '-' },
-    { field: 'no_of_bags', headerName: 'Bags', width: 80, renderCell: (p) => p.value ?? '-' },
-    { field: 'qty', headerName: 'Qty', width: 80 },
+    { field: 'no_of_bags', headerName: 'Number of Bags', width: 120, renderCell: (p) => p.value ?? '-' },
+    { field: 'qty', headerName: 'Quantity', width: 90 },
     { field: 'unit_id', headerName: 'Unit', width: 80, renderCell: (p) => unitMap.get(p.value as number)?.abbreviation ?? p.value },
     { field: 'rate', headerName: 'Rate', width: 100, renderCell: (p) => formatINR(p.value as number) },
     { field: 'gross_amt', headerName: 'Gross Amt', width: 120, renderCell: (p) => formatINR(p.value as number) },
@@ -168,7 +168,7 @@ const InboundPageComp = () => {
           <FormSelectField name="category" label="Category" options={CATEGORY_OPTIONS} />
           <FormSelectField name="unit_id" label="Unit" options={unitOptions} required />
           <FormField name="rate" label="Rate" type="number" required />
-          <BagQuantityFields showAmount amountLabel="Gross Amount" />
+          <BagQuantityFields showAmount amountLabel="Gross Amount" unitMap={unitMap} />
           <FormField name="moisture_pct" label="Moisture %" type="number" />
           <FormField name="paid" label="Paid" type="number" />
           {editing && (

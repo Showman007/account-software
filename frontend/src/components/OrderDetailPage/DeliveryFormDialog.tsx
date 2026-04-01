@@ -13,7 +13,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { createDelivery } from '../../api/resources.ts';
 import { useReferenceData } from '../../hooks/useReferenceData.ts';
-import { BAG_TYPE_OPTIONS } from '../common/BagQuantityFields.tsx';
+import { BAG_TYPE_OPTIONS, getConversionMode, bagsToQty, qtyToBags } from '../common/BagQuantityFields.tsx';
 import type { Order, OrderItem } from '../../types/orders.ts';
 
 interface Props {
@@ -52,7 +52,13 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
         unit_abbr: item.unit?.abbreviation || unitMap.get(item.unit_id)?.abbreviation || '',
         available: item.pending_qty,
         bag_type: item.bag_type ?? '',
-        no_of_bags: item.pending_qty && item.bag_type ? Number(((item.pending_qty * 100) / item.bag_type).toFixed(2)) : '',
+        no_of_bags: (() => {
+          if (!item.bag_type || !item.pending_qty) return '';
+          const unitName = item.unit?.name || unitMap.get(item.unit_id)?.name;
+          const mode = getConversionMode(unitName);
+          const bags = qtyToBags(item.pending_qty, item.bag_type, mode);
+          return bags ?? '';
+        })(),
         qty: item.pending_qty,
         selected: true,
       }));
@@ -80,12 +86,18 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
     setItems((prev) => prev.map((item, i) => i === index ? { ...item, selected: !item.selected } : item));
   };
 
+  const getItemMode = (item: DeliveryItemRow) => {
+    const unitName = unitMap.get(item.unit_id)?.name;
+    return getConversionMode(unitName);
+  };
+
   const updateQty = (index: number, qty: number) => {
     setItems((prev) => prev.map((item, i) => {
       if (i !== index) return item;
       const clampedQty = Math.min(qty, item.available);
       const bt = Number(item.bag_type);
-      const bags = bt > 0 ? Number(((clampedQty * 100) / bt).toFixed(2)) : item.no_of_bags;
+      const mode = getItemMode(item);
+      const bags = bt > 0 ? (qtyToBags(clampedQty, bt, mode) ?? item.no_of_bags) : item.no_of_bags;
       return { ...item, qty: clampedQty, no_of_bags: bags };
     }));
   };
@@ -94,7 +106,9 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
     setItems((prev) => prev.map((item, i) => {
       if (i !== index) return item;
       const bt = Number(item.bag_type);
-      const qty = bt > 0 ? Math.min(Number(((bags * bt) / 100).toFixed(3)), item.available) : item.qty;
+      const mode = getItemMode(item);
+      const computed = bt > 0 ? bagsToQty(bags, bt, mode) : null;
+      const qty = computed !== null ? Math.min(computed, item.available) : item.qty;
       return { ...item, no_of_bags: bags, qty };
     }));
   };
@@ -103,7 +117,8 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
     setItems((prev) => prev.map((item, i) => {
       if (i !== index) return item;
       const bt = Number(bagType);
-      const bags = bt > 0 && item.qty > 0 ? Number(((item.qty * 100) / bt).toFixed(2)) : '';
+      const mode = getItemMode(item);
+      const bags = bt > 0 && item.qty > 0 ? (qtyToBags(item.qty, bt, mode) ?? '') : '';
       return { ...item, bag_type: bagType, no_of_bags: bags };
     }));
   };
@@ -169,8 +184,8 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
                   <TableCell>Unit</TableCell>
                   <TableCell align="right">Available</TableCell>
                   <TableCell align="center">Bag Type</TableCell>
-                  <TableCell align="right">Bags</TableCell>
-                  <TableCell align="right">Deliver Qty</TableCell>
+                  <TableCell align="right">Number of Bags</TableCell>
+                  <TableCell align="right">Deliver Quantity</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

@@ -7,7 +7,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useForm, useFormContext, FormProvider, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFormContext, useWatch, FormProvider, useFieldArray, Controller } from 'react-hook-form';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Autocomplete } from '@mui/material';
 import dayjs from 'dayjs';
@@ -39,12 +39,13 @@ function OrderLineItem({
   index: number;
   outboundProducts: { value: number; label: string }[];
   unitOptions: { value: number; label: string }[];
+  unitMap: Map<number, { name: string; abbreviation: string }>;
   canRemove: boolean;
   onRemove: () => void;
 }) {
   const { register, control } = useFormContext();
   const prefix = `order_items_attributes.${index}`;
-  const { bagType, amount, onBagTypeChange, onBagsChange, onQtyChange, setLastEdited } = useBagQtySync(prefix);
+  const { bagType, amount, onBagTypeChange, onBagsChange, onQtyChange, setLastEdited } = useBagQtySync(prefix, unitMap);
 
   return (
     <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -70,8 +71,8 @@ function OrderLineItem({
       <TextField
         {...register(`${prefix}.bag_type`)}
         select
-        label="Bag"
-        sx={{ width: 100 }}
+        label="Bag Type"
+        sx={{ width: 110 }}
         value={bagType ?? ''}
         onChange={(e) => onBagTypeChange(e.target.value === '' ? '' : Number(e.target.value))}
       >
@@ -81,19 +82,19 @@ function OrderLineItem({
       </TextField>
       <TextField
         {...register(`${prefix}.no_of_bags`, { valueAsNumber: true })}
-        label="Bags"
+        label="Number of Bags"
         type="number"
-        sx={{ width: 80 }}
-        slotProps={{ htmlInput: { step: 'any', min: 0 } }}
+        sx={{ width: 130 }}
+        slotProps={{ inputLabel: { shrink: true }, htmlInput: { step: 'any', min: 0 } }}
         onFocus={() => setLastEdited('bags')}
         onChange={(e) => onBagsChange(e.target.value === '' ? '' : Number(e.target.value))}
       />
       <TextField
         {...register(`${prefix}.qty`, { required: true, valueAsNumber: true })}
-        label="Qty"
+        label="Quantity"
         type="number"
-        sx={{ width: 90 }}
-        slotProps={{ htmlInput: { step: 'any', min: 0 } }}
+        sx={{ width: 110 }}
+        slotProps={{ inputLabel: { shrink: true }, htmlInput: { step: 'any', min: 0 } }}
         onFocus={() => setLastEdited('qty')}
         onChange={(e) => onQtyChange(e.target.value === '' ? '' : Number(e.target.value))}
       />
@@ -138,7 +139,7 @@ export default function OrderFormDialog({ open, onClose, editing, onSuccess }: P
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const queryClient = useQueryClient();
-  const { parties, products, units } = useReferenceData();
+  const { parties, products, units, unitMap } = useReferenceData();
   const [submitting, setSubmitting] = useState(false);
 
   const partyOptions = useMemo(
@@ -187,8 +188,8 @@ export default function OrderFormDialog({ open, onClose, editing, onSuccess }: P
 
   const methods = useForm<OrderFormData>({ defaultValues });
   const { fields, append, remove } = useFieldArray({ control: methods.control, name: 'order_items_attributes' });
-  const watchItems = methods.watch('order_items_attributes');
-  const watchDiscount = methods.watch('discount');
+  const watchItems = useWatch({ control: methods.control, name: 'order_items_attributes' });
+  const watchDiscount = useWatch({ control: methods.control, name: 'discount' });
 
   const subtotal = useMemo(() => {
     return (watchItems || []).reduce((sum, item) => {
@@ -321,6 +322,7 @@ export default function OrderFormDialog({ open, onClose, editing, onSuccess }: P
                 index={index}
                 outboundProducts={outboundProducts}
                 unitOptions={unitOptions}
+                unitMap={unitMap}
                 canRemove={fields.length > 1}
                 onRemove={() => remove(index)}
               />
