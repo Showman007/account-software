@@ -2,7 +2,7 @@ module Api
   module V1
     class PaymentsController < BaseController
       def index
-        scope = policy_scope(Payment).includes(:party, :payment_mode)
+        scope = policy_scope(Payment).includes(:party, :payment_mode, :payment_allocations)
         scope = scope.joins(:party).where('parties.name ILIKE ?', "%#{params[:q]}%") if params[:q].present?
         scope = scope.where(party_id: params[:party_id]) if params[:party_id].present?
         scope = scope.where(direction: params[:direction]) if params[:direction].present?
@@ -12,7 +12,7 @@ module Api
 
         records, meta = paginate(scope)
         render json: {
-          data: PaymentSerializer.render_as_hash(records),
+          data: PaymentWithAllocationsSerializer.render_as_hash(records),
           meta: meta
         }
       end

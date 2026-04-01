@@ -1,6 +1,10 @@
 import { useState, useMemo, useRef } from 'react';
-import { TextField } from '@mui/material';
+import { TextField, Chip, Box, Typography, Table, TableBody, TableCell, TableRow, TableHead, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
+import LinkIcon from '@mui/icons-material/Link';
+import PaymentIcon from '@mui/icons-material/Payment';
+import CloseIcon from '@mui/icons-material/Close';
 import type { GridColDef } from '@mui/x-data-grid';
+import { useNavigate } from 'react-router-dom';
 import DataTable from '../common/DataTable.tsx';
 import FormDialog from '../common/FormDialog.tsx';
 import { FormField, FormDateField, FormAutocomplete, FormSelectField } from '../common/FormField.tsx';
@@ -25,6 +29,8 @@ const OutboundPageComp = () => {
   const [editing, setEditing] = useState<OutboundEntry | null>(null);
   const [stagedFile, setStagedFile] = useState<File | null>(null);
   const stagedFileRef = useRef<File | null>(null);
+  const [paymentDialogEntry, setPaymentDialogEntry] = useState<OutboundEntry | null>(null);
+  const navigate = useNavigate();
 
   const partyOptions = useMemo(
     () => parties.filter((p) => p.party_type === 'buyer' || p.party_type === 'both').map((p) => ({ id: p.id, label: p.name })),
@@ -64,6 +70,51 @@ const OutboundPageComp = () => {
     { field: 'total_bill', headerName: 'Total Bill', width: 120, renderCell: (p) => formatINR(p.value as number) },
     { field: 'received', headerName: 'Received', width: 110, renderCell: (p) => formatINR(p.value as number) },
     { field: 'balance', headerName: 'Balance', width: 110, renderCell: (p) => formatINR(p.value as number) },
+    {
+      field: 'order_number', headerName: 'Order', width: 130, sortable: false,
+      renderCell: (p) => {
+        const row = p.row as OutboundEntry;
+        if (!row.order_number) return '-';
+        return (
+          <Chip
+            icon={<LinkIcon />}
+            label={row.order_number}
+            size="small"
+            color="primary"
+            variant="outlined"
+            clickable
+            onClick={(e) => { e.stopPropagation(); navigate(`/orders/${row.order_id}`); }}
+          />
+        );
+      },
+    },
+    {
+      field: 'delivery_number', headerName: 'Delivery', width: 130, sortable: false,
+      renderCell: (p) => {
+        const row = p.row as OutboundEntry;
+        if (!row.delivery_number) return '-';
+        return <Chip label={row.delivery_number} size="small" variant="outlined" />;
+      },
+    },
+    {
+      field: 'payments', headerName: 'Payments', width: 110, sortable: false,
+      renderCell: (p) => {
+        const row = p.row as OutboundEntry;
+        const allocs = row.payment_allocations ?? [];
+        if (allocs.length === 0) return '-';
+        return (
+          <Chip
+            icon={<PaymentIcon />}
+            label={`${allocs.length}`}
+            size="small"
+            color="success"
+            variant="outlined"
+            clickable
+            onClick={(e) => { e.stopPropagation(); setPaymentDialogEntry(row); }}
+          />
+        );
+      },
+    },
     {
       field: 'attachment', headerName: 'File', width: 70, sortable: false,
       renderCell: (p) => {
@@ -196,6 +247,68 @@ const OutboundPageComp = () => {
       <FilterBar filters={filterConfig} params={crud.params} updateParams={crud.updateParams} />
       {tableComp()}
       {formComp()}
+
+      {/* Payment Details Dialog */}
+      <Dialog open={!!paymentDialogEntry} onClose={() => setPaymentDialogEntry(null)} maxWidth="md" fullWidth>
+        {paymentDialogEntry && (
+          <>
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <PaymentIcon color="success" />
+                  <Typography variant="h6">Payment Details</Typography>
+                </Box>
+                <IconButton edge="end" onClick={() => setPaymentDialogEntry(null)}><CloseIcon /></IconButton>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 3, mt: 1, flexWrap: 'wrap' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Party: <strong>{partyMap.get(paymentDialogEntry.party_id)?.name}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Product: <strong>{productMap.get(paymentDialogEntry.product_id)?.name}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Bill: <strong>{formatINR(paymentDialogEntry.total_bill)}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Received: <strong style={{ color: '#66bb6a' }}>{formatINR(paymentDialogEntry.received)}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Balance: <strong style={{ color: paymentDialogEntry.balance > 0 ? '#ef5350' : '#66bb6a' }}>{formatINR(paymentDialogEntry.balance)}</strong>
+                </Typography>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Payment #</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Mode</TableCell>
+                    <TableCell>Reference</TableCell>
+                    <TableCell align="right">Allocated</TableCell>
+                    <TableCell align="right">Total Payment</TableCell>
+                    <TableCell>Remarks</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(paymentDialogEntry.payment_allocations ?? []).map((alloc) => (
+                    <TableRow key={alloc.id}>
+                      <TableCell>{alloc.payment?.id ?? '-'}</TableCell>
+                      <TableCell>{alloc.payment?.date ?? '-'}</TableCell>
+                      <TableCell>{alloc.payment?.payment_mode?.name ?? '-'}</TableCell>
+                      <TableCell>{alloc.payment?.reference ?? '-'}</TableCell>
+                      <TableCell align="right">{formatINR(alloc.amount)}</TableCell>
+                      <TableCell align="right">{alloc.payment ? formatINR(alloc.payment.amount) : '-'}</TableCell>
+                      <TableCell>{alloc.payment?.remarks ?? '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
     </>
   );
 };
