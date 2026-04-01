@@ -59,6 +59,19 @@ export interface OutboundEntry {
   payment_allocations?: PaymentAllocation[];
 }
 
+export interface PaymentAllocationDetail {
+  id: number;
+  amount: number;
+  bill_type: 'OutboundEntry' | 'InboundEntry';
+  bill_id: number;
+  bill_date?: string;
+  product_name?: string;
+  bill_total?: number;
+  order_id?: number | null;
+  order_number?: string | null;
+  delivery_number?: string | null;
+}
+
 export interface Payment {
   id: number;
   date: string;
@@ -72,4 +85,5 @@ export interface Payment {
   reversed: boolean;
   reversed_payment_id: number | null;
   payment_mode?: { id: number; name: string };
+  allocations?: PaymentAllocationDetail[];
 }

@@ -16,6 +16,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  TableHead,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
@@ -24,7 +29,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UndoIcon from '@mui/icons-material/Undo';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import LinkIcon from '@mui/icons-material/Link';
+import CloseIcon from '@mui/icons-material/Close';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import FormDialog from '../common/FormDialog.tsx';
 import { FormField, FormDateField, FormAutocomplete, FormSelectField } from '../common/FormField.tsx';
@@ -49,6 +59,7 @@ const PaymentsPageComp = () => {
   const colors = useAppColors();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { parties, paymentModes, partyMap, paymentModeMap } = useReferenceData();
 
   const [params, setParams] = useState<QueryParams>({ page: 1, per_page: 25 });
@@ -62,6 +73,9 @@ const PaymentsPageComp = () => {
   // Reverse confirmation dialog
   const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
   const [reverseTarget, setReverseTarget] = useState<Payment | null>(null);
+
+  // Allocations dialog
+  const [allocDialogPayment, setAllocDialogPayment] = useState<Payment | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['payments', params],
@@ -190,6 +204,25 @@ const PaymentsPageComp = () => {
       },
     },
     { field: 'remarks', headerName: 'Remarks', flex: 1 },
+    {
+      field: 'allocations', headerName: 'Bills', width: 100, sortable: false,
+      renderCell: (p) => {
+        const row = p.row as Payment;
+        const allocs = row.allocations ?? [];
+        if (allocs.length === 0) return '-';
+        return (
+          <Chip
+            icon={<ReceiptLongIcon />}
+            label={`${allocs.length}`}
+            size="small"
+            color="info"
+            variant="outlined"
+            clickable
+            onClick={(e) => { e.stopPropagation(); setAllocDialogPayment(row); }}
+          />
+        );
+      },
+    },
     {
       field: 'receipt', headerName: 'Receipt', width: 70, sortable: false,
       renderCell: (p) => {
@@ -353,6 +386,88 @@ const PaymentsPageComp = () => {
             {reverseMutation.isPending ? 'Reversing...' : 'Confirm Reverse'}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Allocations Dialog */}
+      <Dialog open={!!allocDialogPayment} onClose={() => setAllocDialogPayment(null)} maxWidth="md" fullWidth>
+        {allocDialogPayment && (
+          <>
+            <DialogTitle>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <PaymentIcon color="info" />
+                  <Typography variant="h6">Payment #{allocDialogPayment.id} — Bill Allocations</Typography>
+                </Box>
+                <IconButton edge="end" onClick={() => setAllocDialogPayment(null)}><CloseIcon /></IconButton>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 3, mt: 1, flexWrap: 'wrap' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Party: <strong>{partyMap.get(allocDialogPayment.party_id)?.name}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Date: <strong>{allocDialogPayment.date}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Amount: <strong>{formatINR(allocDialogPayment.amount)}</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Direction: <strong>{getPaymentLabel(allocDialogPayment.direction, false)}</strong>
+                </Typography>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Bill Date</TableCell>
+                    <TableCell>Product</TableCell>
+                    <TableCell align="right">Bill Total</TableCell>
+                    <TableCell align="right">Allocated</TableCell>
+                    <TableCell>Order</TableCell>
+                    <TableCell>Delivery</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(allocDialogPayment.allocations ?? []).map((alloc) => (
+                    <TableRow key={alloc.id}>
+                      <TableCell>
+                        <Chip
+                          label={alloc.bill_type === 'OutboundEntry' ? 'Sale' : 'Purchase'}
+                          size="small"
+                          color={alloc.bill_type === 'OutboundEntry' ? 'primary' : 'secondary'}
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>{alloc.bill_date ?? '-'}</TableCell>
+                      <TableCell>{alloc.product_name ?? '-'}</TableCell>
+                      <TableCell align="right">{alloc.bill_total != null ? formatINR(alloc.bill_total) : '-'}</TableCell>
+                      <TableCell align="right">{formatINR(alloc.amount)}</TableCell>
+                      <TableCell>
+                        {alloc.order_number ? (
+                          <Chip
+                            icon={<LinkIcon />}
+                            label={alloc.order_number}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            clickable
+                            onClick={() => navigate(`/orders/${alloc.order_id}`)}
+                          />
+                        ) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {alloc.delivery_number ? (
+                          <Chip label={alloc.delivery_number} size="small" variant="outlined" />
+                        ) : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </DialogContent>
+          </>
+        )}
       </Dialog>
 
       {/* Create Payment Dialog */}
