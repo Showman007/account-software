@@ -49,7 +49,10 @@ class OrderCreditNoteService
         else
           # Partial return: reduce qty on the outbound entry
           new_qty = original_outbound.qty - cni.qty
-          original_outbound.update!(qty: new_qty)
+          new_bags = if original_outbound.no_of_bags.present? && original_outbound.qty > 0
+                       (original_outbound.no_of_bags * new_qty / original_outbound.qty).round(2)
+                     end
+          original_outbound.update!(qty: new_qty, no_of_bags: new_bags)
         end
       end
     end

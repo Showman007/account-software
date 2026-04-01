@@ -42,20 +42,22 @@ export default function CreditNoteFormDialog({ open, onClose, order, delivery, o
   const { productMap, unitMap } = useReferenceData();
 
   const returnableItems: ReturnItemRow[] = useMemo(() => {
-    return delivery.delivery_items.map((di) => {
-      const orderItem = order.order_items.find((oi) => oi.id === di.order_item_id);
-      return {
-        delivery_item_id: di.id,
-        product_id: di.product_id,
-        product_name: di.product?.name || productMap.get(di.product_id)?.name || '',
-        unit_id: di.unit_id,
-        unit_abbr: di.unit?.abbreviation || unitMap.get(di.unit_id)?.abbreviation || '',
-        delivered_qty: di.qty,
-        rate: orderItem?.rate ?? 0,
-        qty: 0,
-        selected: false,
-      };
-    });
+    return delivery.delivery_items
+      .filter((di) => (di.returnable_qty ?? di.qty) > 0)
+      .map((di) => {
+        const orderItem = order.order_items.find((oi) => oi.id === di.order_item_id);
+        return {
+          delivery_item_id: di.id,
+          product_id: di.product_id,
+          product_name: di.product?.name || productMap.get(di.product_id)?.name || '',
+          unit_id: di.unit_id,
+          unit_abbr: di.unit?.abbreviation || unitMap.get(di.unit_id)?.abbreviation || '',
+          delivered_qty: di.returnable_qty ?? di.qty,
+          rate: orderItem?.rate ?? 0,
+          qty: 0,
+          selected: false,
+        };
+      });
   }, [delivery, order, productMap, unitMap]);
 
   const [items, setItems] = useState<ReturnItemRow[]>(returnableItems);

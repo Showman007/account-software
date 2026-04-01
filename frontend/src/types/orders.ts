@@ -64,6 +64,7 @@ export interface DeliveryItem {
   no_of_bags: number | null;
   qty: number;
   unit_id: number;
+  returnable_qty: number;
   product?: { id: number; name: string };
   unit?: { id: number; name: string; abbreviation: string };
 }

@@ -34,6 +34,7 @@ interface DeliveryItemRow {
   no_of_bags: number | '';
   qty: number;
   selected: boolean;
+  bag_type_from_order: boolean;
 }
 
 export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: Props) {
@@ -61,6 +62,7 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
         })(),
         qty: item.pending_qty,
         selected: true,
+        bag_type_from_order: item.bag_type != null && item.bag_type > 0,
       }));
   }, [order, productMap, unitMap]);
 
@@ -198,18 +200,22 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
                     <TableCell>{item.unit_abbr}</TableCell>
                     <TableCell align="right">{item.available}</TableCell>
                     <TableCell align="center">
-                      <TextField
-                        select
-                        size="small"
-                        value={item.bag_type}
-                        onChange={(e) => updateBagType(index, e.target.value === '' ? '' : Number(e.target.value))}
-                        disabled={!item.selected}
-                        sx={{ width: 100 }}
-                      >
-                        {BAG_TYPE_OPTIONS.map((opt) => (
-                          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                        ))}
-                      </TextField>
+                      {item.bag_type_from_order ? (
+                        <Typography variant="body2">{item.bag_type} kg</Typography>
+                      ) : (
+                        <TextField
+                          select
+                          size="small"
+                          value={item.bag_type}
+                          onChange={(e) => updateBagType(index, e.target.value === '' ? '' : Number(e.target.value))}
+                          disabled={!item.selected}
+                          sx={{ width: 100 }}
+                        >
+                          {BAG_TYPE_OPTIONS.map((opt) => (
+                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                          ))}
+                        </TextField>
+                      )}
                     </TableCell>
                     <TableCell align="right">
                       <TextField

@@ -33,6 +33,7 @@ function OrderLineItem({
   index,
   outboundProducts,
   unitOptions,
+  unitMap,
   canRemove,
   onRemove,
 }: {
@@ -80,6 +81,18 @@ function OrderLineItem({
           <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
         ))}
       </TextField>
+      <Controller
+        name={`${prefix}.unit_id`}
+        control={control}
+        rules={{ required: 'Required' }}
+        render={({ field: f }) => (
+          <TextField {...f} select label="Unit" sx={{ width: 120 }} value={f.value ?? ''}>
+            {unitOptions.map((u) => (
+              <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
+            ))}
+          </TextField>
+        )}
+      />
       <TextField
         {...register(`${prefix}.no_of_bags`, { valueAsNumber: true })}
         label="Number of Bags"
@@ -97,18 +110,6 @@ function OrderLineItem({
         slotProps={{ inputLabel: { shrink: true }, htmlInput: { step: 'any', min: 0 } }}
         onFocus={() => setLastEdited('qty')}
         onChange={(e) => onQtyChange(e.target.value === '' ? '' : Number(e.target.value))}
-      />
-      <Controller
-        name={`${prefix}.unit_id`}
-        control={control}
-        rules={{ required: 'Required' }}
-        render={({ field: f }) => (
-          <TextField {...f} select label="Unit" sx={{ width: 120 }} value={f.value ?? ''}>
-            {unitOptions.map((u) => (
-              <MenuItem key={u.value} value={u.value}>{u.label}</MenuItem>
-            ))}
-          </TextField>
-        )}
       />
       <TextField
         {...register(`${prefix}.rate`, { required: true, valueAsNumber: true })}
