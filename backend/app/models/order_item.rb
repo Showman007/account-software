@@ -16,6 +16,14 @@ class OrderItem < ApplicationRecord
     qty - delivered_qty + returned_qty
   end
 
+  # Qty still available for new deliveries (excludes pending/in_transit deliveries)
+  def available_for_delivery_qty
+    in_progress = delivery_items.joins(:delivery)
+                                .where(deliveries: { status: [:pending, :in_transit] })
+                                .sum(:qty)
+    [deliverable_qty - in_progress, 0].max
+  end
+
   def fully_delivered?
     deliverable_qty <= 0
   end

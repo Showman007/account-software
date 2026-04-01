@@ -10,4 +10,5 @@ class OrderSerializer < Blueprinter::Base
   association :order_items, blueprint: OrderItemSerializer
   association :order_events, blueprint: OrderEventSerializer
   association :deliveries, blueprint: DeliverySerializer
+  association :order_credit_notes, blueprint: OrderCreditNoteSerializer
 end

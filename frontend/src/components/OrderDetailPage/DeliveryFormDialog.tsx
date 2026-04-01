@@ -34,6 +34,7 @@ interface DeliveryItemRow {
   no_of_bags: number | '';
   qty: number;
   selected: boolean;
+  bag_type_from_order: boolean;
 }
 
 export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: Props) {
@@ -43,25 +44,29 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
 
   const pendingItems: DeliveryItemRow[] = useMemo(() => {
     return order.order_items
-      .filter((item) => item.pending_qty > 0)
-      .map((item) => ({
-        order_item_id: item.id,
-        product_id: item.product_id,
-        product_name: item.product?.name || productMap.get(item.product_id)?.name || '',
-        unit_id: item.unit_id,
-        unit_abbr: item.unit?.abbreviation || unitMap.get(item.unit_id)?.abbreviation || '',
-        available: item.pending_qty,
-        bag_type: item.bag_type ?? '',
-        no_of_bags: (() => {
-          if (!item.bag_type || !item.pending_qty) return '';
-          const unitName = item.unit?.name || unitMap.get(item.unit_id)?.name;
-          const mode = getConversionMode(unitName);
-          const bags = qtyToBags(item.pending_qty, item.bag_type, mode);
-          return bags ?? '';
-        })(),
-        qty: item.pending_qty,
-        selected: true,
-      }));
+      .filter((item) => (item.available_for_delivery_qty ?? item.pending_qty) > 0)
+      .map((item) => {
+        const available = item.available_for_delivery_qty ?? item.pending_qty;
+        return {
+          order_item_id: item.id,
+          product_id: item.product_id,
+          product_name: item.product?.name || productMap.get(item.product_id)?.name || '',
+          unit_id: item.unit_id,
+          unit_abbr: item.unit?.abbreviation || unitMap.get(item.unit_id)?.abbreviation || '',
+          available,
+          bag_type: item.bag_type ?? '',
+          no_of_bags: (() => {
+            if (!item.bag_type || !available) return '';
+            const unitName = item.unit?.name || unitMap.get(item.unit_id)?.name;
+            const mode = getConversionMode(unitName);
+            const bags = qtyToBags(available, item.bag_type, mode);
+            return bags ?? '';
+          })(),
+          qty: available,
+          selected: true,
+          bag_type_from_order: item.bag_type != null && item.bag_type > 0,
+        };
+      });
   }, [order, productMap, unitMap]);
 
   const [items, setItems] = useState<DeliveryItemRow[]>(pendingItems);
@@ -198,18 +203,22 @@ export default function DeliveryFormDialog({ open, onClose, order, onSuccess }: 
                     <TableCell>{item.unit_abbr}</TableCell>
                     <TableCell align="right">{item.available}</TableCell>
                     <TableCell align="center">
-                      <TextField
-                        select
-                        size="small"
-                        value={item.bag_type}
-                        onChange={(e) => updateBagType(index, e.target.value === '' ? '' : Number(e.target.value))}
-                        disabled={!item.selected}
-                        sx={{ width: 100 }}
-                      >
-                        {BAG_TYPE_OPTIONS.map((opt) => (
-                          <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                        ))}
-                      </TextField>
+                      {item.bag_type_from_order ? (
+                        <Typography variant="body2">{item.bag_type} kg</Typography>
+                      ) : (
+                        <TextField
+                          select
+                          size="small"
+                          value={item.bag_type}
+                          onChange={(e) => updateBagType(index, e.target.value === '' ? '' : Number(e.target.value))}
+                          disabled={!item.selected}
+                          sx={{ width: 100 }}
+                        >
+                          {BAG_TYPE_OPTIONS.map((opt) => (
+                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                          ))}
+                        </TextField>
+                      )}
                     </TableCell>
                     <TableCell align="right">
                       <TextField

@@ -96,17 +96,17 @@ class BillPdfService
 
     # Items table
     items_data = [
-      ["#", "Product", "Category", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount"]
+      ["#", "Product", "Category", "Unit", "Bag Type", "Bags", "Qty", "Rate", "Amount"]
     ]
 
     items_data << [
       "1",
       product.name,
       entry.category || "-",
+      unit.abbreviation,
       format_bag_type(entry.bag_type),
       entry.no_of_bags.present? ? format_number(entry.no_of_bags) : "-",
       format_number(entry.qty),
-      unit.abbreviation,
       format_inr(entry.rate),
       format_inr(entry.amount)
     ]
@@ -162,17 +162,17 @@ class BillPdfService
 
     # Items table
     items_data = [
-      ["#", "Product", "Category", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Gross Amt"]
+      ["#", "Product", "Category", "Unit", "Bag Type", "Bags", "Qty", "Rate", "Gross Amt"]
     ]
 
     items_data << [
       "1",
       product.name,
       entry.category || "-",
+      unit.abbreviation,
       format_bag_type(entry.bag_type),
       entry.no_of_bags.present? ? format_number(entry.no_of_bags) : "-",
       format_number(entry.qty),
-      unit.abbreviation,
       format_inr(entry.rate),
       format_inr(entry.gross_amt)
     ]

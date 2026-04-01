@@ -47,7 +47,7 @@ class Delivery < ApplicationRecord
     delivery_items.each do |di|
       next unless di.order_item
 
-      available = di.order_item.deliverable_qty
+      available = di.order_item.available_for_delivery_qty
       if di.qty > available
         errors.add(:base, "#{di.product&.name}: delivery qty (#{di.qty}) exceeds available qty (#{available})")
       end

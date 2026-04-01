@@ -98,6 +98,8 @@ class DeliveryService
           city: order.city,
           product_id: di.product_id,
           category: di.order_item.category,
+          bag_type: di.bag_type,
+          no_of_bags: di.no_of_bags,
           qty: di.qty,
           unit_id: di.unit_id,
           rate: di.order_item.rate,

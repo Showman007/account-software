@@ -133,17 +133,17 @@ class OrderPdfService
 
     # Items table with delivery tracking
     items_data = [
-      ["#", "Product", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount", "Delivered", "Pending"]
+      ["#", "Product", "Unit", "Bag Type", "Bags", "Qty", "Rate", "Amount", "Delivered", "Pending"]
     ]
 
     order.order_items.includes(:product, :unit).each_with_index do |item, idx|
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        item.unit.abbreviation,
         format_bag_type(item.bag_type),
         item.no_of_bags.present? ? format_number(item.no_of_bags) : "-",
         format_number(item.qty),
-        item.unit.abbreviation,
         format_inr(item.rate),
         format_inr(item.amount),
         format_number(item.delivered_qty),
@@ -229,16 +229,16 @@ class OrderPdfService
     end
 
     # Items table
-    items_data = [["#", "Product", "Bag Type", "Bags", "Qty", "Unit"]]
+    items_data = [["#", "Product", "Unit", "Bag Type", "Bags", "Qty"]]
 
     delivery.delivery_items.includes(:product, :unit).each_with_index do |item, idx|
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        item.unit.abbreviation,
         format_bag_type(item.bag_type),
         item.no_of_bags.present? ? format_number(item.no_of_bags) : "-",
-        format_number(item.qty),
-        item.unit.abbreviation
+        format_number(item.qty)
       ]
     end
 
@@ -304,17 +304,17 @@ class OrderPdfService
     end
 
     # Items table
-    items_data = [["#", "Product", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount"]]
+    items_data = [["#", "Product", "Unit", "Bag Type", "Bags", "Qty", "Rate", "Amount"]]
 
     credit_note.credit_note_items.includes(:product, :unit, :delivery_item).each_with_index do |item, idx|
       di = item.delivery_item
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        item.unit.abbreviation,
         di&.bag_type.present? ? format_bag_type(di.bag_type) : "-",
         di&.no_of_bags.present? ? format_number((item.qty * 100 / di.bag_type).round(2)) : "-",
         format_number(item.qty),
-        item.unit.abbreviation,
         format_inr(item.rate),
         format_inr(item.amount)
       ]
@@ -360,16 +360,16 @@ class OrderPdfService
   end
 
   def render_order_items_table(pdf, order)
-    items_data = [["#", "Product", "Bag Type", "Bags", "Qty", "Unit", "Rate", "Amount"]]
+    items_data = [["#", "Product", "Unit", "Bag Type", "Bags", "Qty", "Rate", "Amount"]]
 
     order.order_items.includes(:product, :unit).each_with_index do |item, idx|
       items_data << [
         (idx + 1).to_s,
         item.product.name,
+        item.unit.abbreviation,
         format_bag_type(item.bag_type),
         item.no_of_bags.present? ? format_number(item.no_of_bags) : "-",
         format_number(item.qty),
-        item.unit.abbreviation,
         format_inr(item.rate),
         format_inr(item.amount)
       ]
