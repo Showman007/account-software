@@ -140,6 +140,7 @@ function buildSentence(log: ActivityLog): React.ReactNode {
 // ─── Chart Colors ───────────────────────────────────────────
 
 const PIE_COLORS = ['#1976d2', '#2e7d32', '#f57c00', '#c62828', '#7b1fa2', '#00838f', '#5d4037', '#ad1457'];
+const USER_COLORS = ['#1976d2', '#2e7d32', '#f57c00', '#c62828', '#7b1fa2', '#00838f', '#5d4037', '#ad1457', '#0097a7', '#e91e63'];
 const ACTION_COLORS: Record<string, string> = {
   create: '#2e7d32', update: '#1565c0', destroy: '#c62828', reverse: '#e65100',
   confirm: '#2e7d32', cancel: '#c62828', close: '#546e7a', duplicate: '#6a1b9a',
@@ -155,16 +156,22 @@ function AnalyticsDashboard({ summary }: { summary: ActivitySummary }) {
   const topUsers = Object.entries(summary.most_active_users).sort(([, a], [, b]) => b - a).slice(0, 5);
   const maxCount = topUsers.length > 0 ? topUsers[0][1] : 1;
 
-  // Daily activity chart data (sorted by date)
-  const dailyData = useMemo(() =>
-    Object.entries(summary.daily_activity)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, count]) => ({
+  // Daily activity chart data — stacked per user
+  const allUsers = useMemo(() => Object.keys(summary.user_daily_activity || {}), [summary.user_daily_activity]);
+
+  const dailyData = useMemo(() => {
+    const dates = Object.keys(summary.daily_activity).sort();
+    return dates.map((date) => {
+      const row: Record<string, string | number> = {
         date: new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
-        count,
-      })),
-    [summary.daily_activity]
-  );
+      };
+      allUsers.forEach((email) => {
+        const shortName = email.split('@')[0];
+        row[shortName] = summary.user_daily_activity?.[email]?.[date] || 0;
+      });
+      return row;
+    });
+  }, [summary.daily_activity, summary.user_daily_activity, allUsers]);
 
   // Hourly heatmap data
   const hourlyData = useMemo(() =>
@@ -261,7 +268,18 @@ function AnalyticsDashboard({ summary }: { summary: ActivitySummary }) {
                 <XAxis dataKey="date" fontSize={11} />
                 <YAxis fontSize={11} allowDecimals={false} />
                 <RTooltip />
-                <Bar dataKey="count" name="Actions" fill="#1976d2" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                {allUsers.map((email, i) => (
+                  <Bar
+                    key={email}
+                    dataKey={email.split('@')[0]}
+                    name={email.split('@')[0]}
+                    stackId="users"
+                    fill={USER_COLORS[i % USER_COLORS.length]}
+                    maxBarSize={60}
+                    radius={i === allUsers.length - 1 ? [4, 4, 0, 0] : undefined}
+                  />
+                ))}
+                {allUsers.length > 1 && <Legend iconSize={10} />}
               </BarChart>
             </ResponsiveContainer>
           </Paper>
