@@ -19,6 +19,9 @@ class Payment < ApplicationRecord
 
   scope :active, -> { where(reversed: false) }
 
+  # Track the source entry for auto-payments (not persisted)
+  attr_accessor :source_entry
+
   # Auto-allocate after payment is created (skip for reversals)
   after_create_commit :auto_allocate
 
@@ -55,6 +58,12 @@ class Payment < ApplicationRecord
   def auto_allocate
     return if is_reversal?
 
-    PaymentAllocationService.allocate(self)
+    if source_entry.present?
+      # Auto-payment from an entry: allocate directly to that specific entry
+      PaymentAllocationService.allocate_to_entry(self, source_entry)
+    else
+      # Normal standalone payment: FIFO allocation against oldest outstanding bills
+      PaymentAllocationService.allocate(self)
+    end
   end
 end

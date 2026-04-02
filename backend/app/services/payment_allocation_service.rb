@@ -38,6 +38,35 @@ class PaymentAllocationService
       end
     end
 
+    # Allocate a payment directly to a specific entry (used for auto-payments)
+    # The payment amount is allocated to the source entry first, then any
+    # remaining amount falls through to FIFO allocation against other bills.
+    def allocate_to_entry(payment, entry)
+      return if payment.is_reversal?
+      return if payment.reversed?
+
+      remaining = payment.amount
+      entry_balance = bill_outstanding(entry)
+
+      if entry_balance > 0
+        alloc_amount = [remaining, entry_balance].min
+
+        PaymentAllocation.create!(
+          payment: payment,
+          allocatable: entry,
+          amount: alloc_amount
+        )
+
+        remaining -= alloc_amount
+        recalculate_bill_balance!(entry)
+      end
+
+      # If any amount is left over, allocate remainder via FIFO to other bills
+      if remaining > 0
+        allocate_remainder(payment, remaining)
+      end
+    end
+
     # Deallocate a payment's allocations (called before reversal)
     # Removes all allocations for this payment and recalculates bill balances
     def deallocate(payment)
@@ -89,6 +118,31 @@ class PaymentAllocationService
     end
 
     private
+
+    # Allocate remaining amount via FIFO (skipping already-allocated entries)
+    def allocate_remainder(payment, remaining)
+      bills = outstanding_bills_for(payment)
+      already_allocated_ids = payment.payment_allocations.pluck(:allocatable_id)
+
+      bills.each do |bill|
+        break if remaining <= 0
+        next if already_allocated_ids.include?(bill.id)
+
+        bill_bal = bill_outstanding(bill)
+        next if bill_bal <= 0
+
+        alloc_amount = [remaining, bill_bal].min
+
+        PaymentAllocation.create!(
+          payment: payment,
+          allocatable: bill,
+          amount: alloc_amount
+        )
+
+        remaining -= alloc_amount
+        recalculate_bill_balance!(bill)
+      end
+    end
 
     # Get outstanding bills for a payment (FIFO — oldest first)
     def outstanding_bills_for(payment)
