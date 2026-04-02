@@ -77,7 +77,7 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ filters, params, updateParams }: FilterBarProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   // Count active filters (excluding page, per_page, q, sort, order)
   const skipKeys = new Set(['page', 'per_page', 'q', 'sort', 'order']);
