@@ -45,8 +45,8 @@ module AutoPayment
           direction: payment_direction,
           amount: payment_amount
         )
-        # Re-allocate with new amount
-        PaymentAllocationService.allocate(existing)
+        # Re-allocate directly to this entry (not FIFO)
+        PaymentAllocationService.allocate_to_entry(existing, self)
       else
         build_and_save_payment
       end
@@ -65,7 +65,7 @@ module AutoPayment
   end
 
   def build_and_save_payment
-    Payment.create!(
+    payment = Payment.new(
       date: date,
       party_id: party_id,
       direction: payment_direction,
@@ -73,5 +73,9 @@ module AutoPayment
       reference: auto_payment_reference,
       remarks: "Auto: #{self.class.name.underscore.humanize} ##{id}"
     )
+    # Tell the payment to allocate directly to this entry, not FIFO
+    payment.source_entry = self
+    payment.save!
+    payment
   end
 end
