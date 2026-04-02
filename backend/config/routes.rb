@@ -56,6 +56,13 @@ Rails.application.routes.draw do
       # User management (admin only)
       resources :users
 
+      # Activity Logs (admin only)
+      resources :activity_logs, only: [:index] do
+        collection do
+          get :summary
+        end
+      end
+
       # Master data
       resources :products
       resources :units

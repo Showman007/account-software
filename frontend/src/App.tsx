@@ -41,6 +41,7 @@ import QueryRunnerPage from './pages/QueryRunnerPage.tsx';
 import OrdersPage from './pages/OrdersPage.tsx';
 import OrderDetailPage from './pages/OrderDetailPage.tsx';
 import OrdersDashboardPage from './pages/OrdersDashboardPage.tsx';
+import ActivityLogsPage from './pages/ActivityLogsPage.tsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
@@ -97,6 +98,7 @@ function ThemedApp() {
                 <Route path="/import-export" element={<ImportExportPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/query-runner" element={<QueryRunnerPage />} />
+                <Route path="/activity-logs" element={<ActivityLogsPage />} />
               </Route>
             </Routes>
           </BrowserRouter>

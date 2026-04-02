@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types/auth.ts';
 import * as authApi from '../api/auth.ts';
+import { useIdleTimeout } from '../hooks/useIdleTimeout.ts';
+import { toast } from 'react-toastify';
 
 interface AuthContextType {
   user: User | null;
@@ -60,6 +62,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
+
+  // Auto-logout after 1 hour of inactivity
+  const idleLogoutRef = useRef(() => {});
+  idleLogoutRef.current = () => {
+    if (isAuthenticated) {
+      toast.warn('Session expired due to inactivity. Please log in again.');
+      localStorage.removeItem('token');
+      setUser(null);
+      window.location.href = '/login';
+    }
+  };
+  useIdleTimeout(60 * 60 * 1000, () => idleLogoutRef.current(), isAuthenticated);
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, isAdmin, loading, login, googleLogin, register, logout }}>

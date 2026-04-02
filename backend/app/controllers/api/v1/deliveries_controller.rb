@@ -30,6 +30,7 @@ module Api
         delivery = Delivery.find(params[:id])
         authorize delivery
         DeliveryService.mark_in_transit(delivery, user: current_user)
+        track_activity(action: 'mark_in_transit', record: delivery)
         render json: { data: DeliverySerializer.render_as_hash(delivery.reload) }
       end
 
@@ -37,6 +38,7 @@ module Api
         delivery = Delivery.find(params[:id])
         authorize delivery
         DeliveryService.mark_delivered(delivery, user: current_user)
+        track_activity(action: 'mark_delivered', record: delivery)
         render json: { data: DeliverySerializer.render_as_hash(delivery.reload) }
       end
 

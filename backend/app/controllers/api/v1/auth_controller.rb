@@ -2,17 +2,21 @@ module Api
   module V1
     class AuthController < BaseController
       skip_before_action :authenticate_user!, only: [:sign_in, :google]
+      skip_after_action :log_activity, raise: false
+      skip_after_action :log_view_activity, raise: false
 
       def sign_in
         user_params = params[:user] || params
         user = User.find_by(email: user_params[:email])
         if user&.valid_password?(user_params[:password])
           token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+          log_auth_activity('sign_in', user)
           render json: {
             token: token,
             user: UserSerializer.render_as_hash(user)
           }, status: :ok
         else
+          log_auth_activity('failed_sign_in', nil, email: user_params[:email])
           render json: { error: "Invalid email or password" }, status: :unauthorized
         end
       end
@@ -30,6 +34,7 @@ module Api
 
         user = User.from_google(payload)
         token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+        log_auth_activity('google_sign_in', user)
 
         render json: {
           token: token,
@@ -42,6 +47,7 @@ module Api
       end
 
       def sign_out
+        log_auth_activity('sign_out', current_user)
         current_user.update!(jti: SecureRandom.uuid)
         render json: { message: "Signed out successfully" }, status: :ok
       end
@@ -51,6 +57,24 @@ module Api
       end
 
       private
+
+      def log_auth_activity(action, user, metadata = {})
+        return unless user # Skip logging for failed attempts with no user
+
+        ActivityLog.create!(
+          user: user,
+          action: action,
+          resource_type: 'User',
+          resource_id: user.id,
+          resource_label: "User: #{user.email}",
+          controller_name: self.class.name,
+          ip_address: request.remote_ip,
+          user_agent: request.user_agent&.truncate(500),
+          metadata: metadata
+        )
+      rescue StandardError => e
+        Rails.logger.warn("ActivityLog auth failed: #{e.message}")
+      end
 
       def verify_google_token(credential)
         require "google-id-token"
