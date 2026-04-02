@@ -131,6 +131,43 @@ export async function backfillJournals(): Promise<{ message: string; count: numb
   return response.data;
 }
 
+// Activity Logs API
+export interface ActivityLog {
+  id: number;
+  action: string;
+  resource_type: string | null;
+  resource_id: number | null;
+  resource_label: string | null;
+  controller_name: string | null;
+  ip_address: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  user_email: string;
+  user_role: string;
+}
+
+export async function fetchActivityLogs(params?: QueryParams): Promise<PaginatedResponse<ActivityLog>> {
+  const response = await apiClient.get('/activity_logs', { params });
+  return response.data;
+}
+
+export interface ActivitySummary {
+  total_actions: number;
+  actions_by_type: Record<string, number>;
+  actions_by_resource: Record<string, number>;
+  actions_by_user: Record<string, number>;
+  daily_activity: Record<string, number>;
+  hourly_activity: Record<string, number>;
+  user_daily_activity: Record<string, Record<string, number>>;
+  write_actions_by_user: Record<string, Record<string, number>>;
+  most_active_users: Record<string, number>;
+}
+
+export async function fetchActivitySummary(days?: number, userEmail?: string): Promise<{ data: ActivitySummary }> {
+  const response = await apiClient.get('/activity_logs/summary', { params: { days, user_email: userEmail || undefined } });
+  return response.data;
+}
+
 export async function fetchOrdersDashboard(params?: { from_date?: string; to_date?: string }): Promise<OrdersDashboardData> {
   const query = new URLSearchParams();
   if (params?.from_date) query.set('from_date', params.from_date);

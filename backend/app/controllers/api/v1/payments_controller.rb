@@ -41,6 +41,7 @@ module Api
         end
 
         reversal = payment.reverse!
+        track_activity(action: 'reverse', record: payment, metadata: { reversal_id: reversal.id })
         render json: {
           data: PaymentSerializer.render_as_hash(reversal),
           message: "Payment ##{payment.id} reversed successfully"

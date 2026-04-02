@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_30_200000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_02_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "activity_logs", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "action", null: false
+    t.string "resource_type"
+    t.bigint "resource_id"
+    t.string "resource_label"
+    t.string "controller_name"
+    t.string "ip_address"
+    t.string "user_agent"
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.index ["action"], name: "index_activity_logs_on_action"
+    t.index ["created_at"], name: "index_activity_logs_on_created_at"
+    t.index ["resource_type", "resource_id"], name: "index_activity_logs_on_resource_type_and_resource_id"
+    t.index ["user_id", "created_at"], name: "index_activity_logs_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_activity_logs_on_user_id"
+  end
 
   create_table "attachments", force: :cascade do |t|
     t.string "attachable_type", null: false
@@ -417,6 +435,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_30_200000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "activity_logs", "users"
   add_foreign_key "credit_note_items", "delivery_items"
   add_foreign_key "credit_note_items", "order_credit_notes"
   add_foreign_key "credit_note_items", "products"

@@ -44,6 +44,7 @@ import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import HistoryIcon from '@mui/icons-material/History';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { useAuth } from '../../context/AuthContext.tsx';
@@ -117,6 +118,7 @@ const navGroups: NavGroup[] = [
       { label: 'Import / Export', path: '/import-export', icon: <ImportExportIcon /> },
       { label: 'Query Runner', path: '/query-runner', icon: <TerminalIcon /> },
       { label: 'Users', path: '/users', icon: <AdminPanelSettingsIcon /> },
+      { label: 'Activity Logs', path: '/activity-logs', icon: <HistoryIcon /> },
     ],
   },
 ];

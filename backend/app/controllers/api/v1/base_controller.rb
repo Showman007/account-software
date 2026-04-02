@@ -1,6 +1,8 @@
 module Api
   module V1
     class BaseController < ApplicationController
+      include ActivityTrackable
+
       private
 
       def apply_filters(scope)

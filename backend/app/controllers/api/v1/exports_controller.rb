@@ -84,6 +84,7 @@ module Api
       end
 
       def send_excel(package, filename)
+        track_activity(action: 'export', metadata: { export_type: filename })
         temp = Tempfile.new([filename, '.xlsx'])
         package.serialize(temp.path)
         send_file temp.path,

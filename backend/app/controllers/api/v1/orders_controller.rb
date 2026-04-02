@@ -44,6 +44,7 @@ module Api
         order = Order.find(params[:id])
         authorize order
         OrderService.confirm(order, user: current_user)
+        track_activity(action: 'confirm', record: order)
         render json: { data: OrderSerializer.render_as_hash(order.reload) }
       end
 
@@ -51,6 +52,7 @@ module Api
         order = Order.find(params[:id])
         authorize order
         OrderService.cancel(order, reason: params[:reason], user: current_user)
+        track_activity(action: 'cancel', record: order, metadata: { reason: params[:reason] })
         render json: { data: OrderSerializer.render_as_hash(order.reload) }
       end
 
@@ -58,6 +60,7 @@ module Api
         order = Order.find(params[:id])
         authorize order
         OrderService.close(order, user: current_user)
+        track_activity(action: 'close', record: order)
         render json: { data: OrderSerializer.render_as_hash(order.reload) }
       end
 
@@ -65,6 +68,7 @@ module Api
         order = Order.find(params[:id])
         authorize order
         new_order = OrderService.duplicate(order, user: current_user)
+        track_activity(action: 'duplicate', record: new_order, metadata: { source_order_id: order.id })
         render json: { data: OrderSerializer.render_as_hash(new_order) }, status: :created
       end
 
