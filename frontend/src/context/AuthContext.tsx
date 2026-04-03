@@ -39,11 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const u = await authApi.login(email, password);
+    localStorage.setItem('last_active_at', Date.now().toString());
     setUser(u);
   }, []);
 
   const googleLogin = useCallback(async (credential: string) => {
     const u = await authApi.googleLogin(credential);
+    localStorage.setItem('last_active_at', Date.now().toString());
     setUser(u);
   }, []);
 
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await authApi.logout();
+    localStorage.removeItem('last_active_at');
     setUser(null);
   }, []);
 
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isAuthenticated) {
       toast.warn('Session expired due to inactivity. Please log in again.');
       localStorage.removeItem('token');
+      localStorage.removeItem('last_active_at');
       setUser(null);
       window.location.href = '/login';
     }
