@@ -39,14 +39,17 @@ export function useIdleTimeout(
     // Check if already timed out (e.g., tab was closed and reopened)
     const lastActive = localStorage.getItem(STORAGE_KEY);
     if (lastActive) {
-      const elapsed = Date.now() - parseInt(lastActive, 10);
-      if (elapsed >= timeoutMs) {
-        onTimeoutRef.current();
-        return;
+      const ts = parseInt(lastActive, 10);
+      if (!isNaN(ts)) {
+        const elapsed = Date.now() - ts;
+        if (elapsed >= timeoutMs) {
+          onTimeoutRef.current();
+          return;
+        }
       }
     }
 
-    // Start initial timer
+    // Start initial timer (also sets last_active_at for first time)
     resetTimer();
 
     // Listen for user activity
